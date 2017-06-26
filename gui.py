@@ -9,6 +9,12 @@ mlil_tooltip = """Often, several assembly instructions make up one MLIL instruct
 The MLIL instruction shown may not correspond to this instruction
 alone, or this instruction may not have a direct MLIL equivalent."""
 
+def make_hline():
+    out =QtWidgets.QFrame()
+    out.setFrameShape(QtWidgets.QFrame.HLine)
+    out.setFrameShadow(QtWidgets.QFrame.Sunken)
+    return out
+
 class ExplanationWindow(QtWidgets.QWidget):
     """ Displays a brief explanation of what an instruction does """
     def __init__(self):
@@ -18,7 +24,7 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._layout = self.layout()
 
         self._labelFont = QFont()
-        self._labelFont.setPointSize(18)
+        self._labelFont.setPointSize(12)
 
         self._labelA = QtWidgets.QLabel()
         self._labelA.setText("Instruction:")
@@ -32,6 +38,8 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._instruction.setOpenExternalLinks(True)
         self._layout.addWidget(self._instruction)
 
+        self._layout.addWidget(make_hline())
+
         self._labelB = QtWidgets.QLabel()
         self._labelB.setText("Description:")
         self._labelB.setFont(self._labelFont)
@@ -39,6 +47,8 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self._description = QtWidgets.QLabel()
         self._layout.addWidget(self._description)
+
+        self._layout.addWidget(make_hline())
 
         self._labelC = QtWidgets.QLabel()
         self._labelC.setText("Equivalent LLIL:")
@@ -49,6 +59,8 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._LLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
         self._layout.addWidget(self._LLIL)
 
+        self._layout.addWidget(make_hline())
+
         self._labelD = QtWidgets.QLabel()
         self._labelD.setText("Equivalent MLIL:")
         self._labelD.setToolTip(mlil_tooltip)
@@ -58,6 +70,8 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._MLIL = QtWidgets.QLabel()
         self._MLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
         self._layout.addWidget(self._MLIL)
+
+        self._layout.addWidget(make_hline())
 
         self._labelE = QtWidgets.QLabel()
         self._labelE.setText("Instruction State:")

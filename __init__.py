@@ -33,10 +33,12 @@ def inst_in_func(func, addr):
 
 def explain_instruction(bv, addr):
     init_gui()
+
     func = get_function_at(bv, addr)
     llil = find_in_IL(func.low_level_il.non_ssa_form, addr)
+
     main_window.explain_window.instruction = inst_in_func(func, addr)
-    main_window.explain_window.description = explain_llil(llil)
+    main_window.explain_window.description = explain_llil(bv, llil)
     main_window.explain_window.llil = llil
     main_window.explain_window.mlil = find_in_IL(func.medium_level_il.non_ssa_form, addr)
     main_window.explain_window.state = get_state(bv, addr)

@@ -1,3 +1,5 @@
 {
-  "LLIL_SET_REG": "Sets {dest} to {src}"
+  "LLIL_SET_REG": "Sets {llil.dest} to {llil.src}",
+  "LLIL_PUSH": "Decrements the stack pointer, then writes the value of {llil.src} onto the stack.",
+  "LLIL_CALL": "Calls the function at {llil.dest}"
 }
