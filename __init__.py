@@ -31,6 +31,22 @@ def inst_in_func(func, addr):
                 return i
     return None
 
+def dereference_symbols(bv, il_instruction):
+    if il_instruction is not None:
+        out = []
+        for item in il_instruction.tokens:
+            try:
+                addr = int(str(item), 16)
+                func = bv.get_function_at(addr)
+                if func is not None:
+                    out.append(func.name)
+                    continue
+            except ValueError:
+                pass
+            out.append(item)
+        il_instruction.deref_tokens = out
+    return il_instruction
+
 def explain_instruction(bv, addr):
     init_gui()
 
@@ -39,8 +55,8 @@ def explain_instruction(bv, addr):
 
     main_window.explain_window.instruction = inst_in_func(func, addr)
     main_window.explain_window.description = explain_llil(bv, llil)
-    main_window.explain_window.llil = llil
-    main_window.explain_window.mlil = find_in_IL(func.medium_level_il.non_ssa_form, addr)
+    main_window.explain_window.llil = dereference_symbols(bv, llil)
+    main_window.explain_window.mlil = dereference_symbols(bv, find_in_IL(func.medium_level_il.non_ssa_form, addr))
     main_window.explain_window.state = get_state(bv, addr)
 
 PluginCommand.register_for_address("Explain Instruction", "", explain_instruction)

@@ -123,14 +123,16 @@ class ExplanationWindow(QtWidgets.QWidget):
     @llil.setter
     def llil(self, llil):
         if llil is not None:
-            self._LLIL.setText(''.join(str(token) for token in llil.tokens))
+            tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
+            self._LLIL.setText(''.join(str(token) for token in tokens))
         else:
             self._LLIL.setText('None')
 
     @mlil.setter
     def mlil(self, mlil):
         if mlil is not None:
-            self._MLIL.setText(''.join(str(token) for token in mlil.tokens))
+            tokens = mlil.deref_tokens if hasattr(mlil, 'deref_tokens') else mlil.tokens
+            self._MLIL.setText(''.join(str(token) for token in tokens))
         else:
             self._MLIL.setText('None')
 
