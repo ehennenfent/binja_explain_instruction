@@ -62,7 +62,7 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._layout.addWidget(make_hline())
 
         self._labelD = QtWidgets.QLabel()
-        self._labelD.setText("Equivalent MLIL:")
+        self._labelD.setText("Equivalent* MLIL:")
         self._labelD.setToolTip(mlil_tooltip)
         self._labelD.setFont(self._labelFont)
         self._layout.addWidget(self._labelD)

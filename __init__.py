@@ -18,11 +18,13 @@ def get_function_at(bv, addr):
     return blocks[0].function if blocks is not None else None
 
 def find_in_IL(il, addr):
+    # out = []
     for block in il:
         for i in block:
             if i.address == addr:
                 return i
-    return None
+                # out.append(i)
+    return None #out
 
 def inst_in_func(func, addr):
     for block in func:

@@ -1,5 +1,17 @@
 {
   "LLIL_SET_REG": "Sets {llil.dest} to {llil.src}",
   "LLIL_PUSH": "Decrements the stack pointer, then writes the value of {llil.src} onto the stack.",
-  "LLIL_CALL": "Calls the function at {llil.dest}"
+  "LLIL_CALL": "Calls the function at {llil.dest}",
+  "LLIL_STORE": "Copies {llil.src} into memory at address {llil.dest} ({llil.size} bytes)",
+  "LLIL_RET": "Pops the return pointer off the stack and jumps to that address.",
+  "LLIL_NOP": "No Operation",
+  "LLIL_GOTO": "Jumps to the instruction at {llil.dest}",
+  "LLIL_IF": "Jumps to {llil.dest} if {llil.condition}",
+  "LLIL_LOAD": "the {llil.size} bytes of memory starting at {llil.src}",
+  "LLIL_UNIMPL": "Binja doesn't understand this instruction yet. Please consult the architecture documentation.",
+  "LLIL_REG": "{llil.src}",
+  "LLIL_ADD": "{llil.left} + {llil.right}",
+  "LLIL_SUB": "{llil.left} - {llil.right}",
+  "LLIL_CONST": "{llil.constant}",
+  "LLIL_ZX": "{llil.size} zero-extended bytes from {llil.src}"
 }
