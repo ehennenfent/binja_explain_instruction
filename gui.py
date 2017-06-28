@@ -117,28 +117,42 @@ class ExplanationWindow(QtWidgets.QWidget):
             self._instruction.setText('None')
 
     @description.setter
-    def description(self, new_description):
-        self._description.setText(new_description)
+    def description(self, desc_list):
+        self._description.setText('\n'.join(new_description for new_description in desc_list))
 
     @llil.setter
-    def llil(self, llil):
-        if llil is not None:
-            tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
-            self._LLIL.setText(''.join(str(token) for token in tokens))
+    def llil(self, llil_list):
+        newText = ""
+        for llil in llil_list:
+            if llil is not None:
+                tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
+                newText += ''.join(str(token) for token in tokens)
+            else:
+                newText += 'None'
+            newText += '\n'
+        if(len(llil_list) > 0):
+            self._LLIL.setText(newText.strip())
         else:
             self._LLIL.setText('None')
 
     @mlil.setter
-    def mlil(self, mlil):
-        if mlil is not None:
-            tokens = mlil.deref_tokens if hasattr(mlil, 'deref_tokens') else mlil.tokens
-            self._MLIL.setText(''.join(str(token) for token in tokens))
+    def mlil(self, mlil_list):
+        newText = ""
+        for mlil in mlil_list:
+            if mlil is not None:
+                tokens = mlil.deref_tokens if hasattr(mlil, 'deref_tokens') else mlil.tokens
+                newText += (''.join(str(token) for token in tokens))
+            else:
+                newText += ('None')
+            newText += '\n'
+        if(len(mlil_list) > 0):
+            self._MLIL.setText(newText.strip())
         else:
             self._MLIL.setText('None')
 
     @state.setter
     def state(self, state_list):
         if state_list is not None:
-            self._stateDisplay.setPlainText('\n'.join(state_list))
+            self._stateDisplay.setPlainText('\n\n'.join(state_list))
         else:
             self.state_Display.setPlainText('None')

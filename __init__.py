@@ -18,13 +18,12 @@ def get_function_at(bv, addr):
     return blocks[0].function if blocks is not None else None
 
 def find_in_IL(il, addr):
-    # out = []
+    out = []
     for block in il:
         for i in block:
             if i.address == addr:
-                return i
-                # out.append(i)
-    return None #out
+                out.append(i)
+    return out
 
 def inst_in_func(func, addr):
     for block in func:
@@ -53,12 +52,12 @@ def explain_instruction(bv, addr):
     init_gui()
 
     func = get_function_at(bv, addr)
-    llil = find_in_IL(func.low_level_il.non_ssa_form, addr)
+    llil_list = find_in_IL(func.low_level_il.non_ssa_form, addr)
 
     main_window.explain_window.instruction = inst_in_func(func, addr)
-    main_window.explain_window.description = explain_llil(bv, llil)
-    main_window.explain_window.llil = dereference_symbols(bv, llil)
-    main_window.explain_window.mlil = dereference_symbols(bv, find_in_IL(func.medium_level_il.non_ssa_form, addr))
+    main_window.explain_window.description = [explain_llil(bv, llil) for llil in llil_list]
+    main_window.explain_window.llil = [dereference_symbols(bv, llil) for llil in llil_list]
+    main_window.explain_window.mlil = [dereference_symbols(bv, mlil) for mlil in find_in_IL(func.medium_level_il.non_ssa_form, addr)]
     main_window.explain_window.state = get_state(bv, addr)
 
 PluginCommand.register_for_address("Explain Instruction", "", explain_instruction)
