@@ -19,4 +19,7 @@ When available, the window provides a link to the documentation for each instruc
 
 ## Contributing
 
-This project is designed to make it simple to add support for new LLIL instructions.
+This plugin is designed to make it simple to add support for new LLIL instructions.
+
+## Open Source
+This plugin incorporates [code by Ryan Stortz (@withzombies)](https://gist.github.com/withzombies/d4f0502754407b22da02664d4eb2fbae) that is used to display information about the CPU state before the selected instruction is executed.
