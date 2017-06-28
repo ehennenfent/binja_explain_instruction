@@ -1,6 +1,5 @@
-from __future__ import print_function
 import json, os, traceback
-from binaryninja import LowLevelILOperation, LowLevelILInstruction
+from binaryninja import LowLevelILOperation, LowLevelILInstruction, log_info, log_error
 
 expr_attrs = ['src', 'dest', 'hi', 'lo', 'left', 'right', 'condition']
 
@@ -46,8 +45,8 @@ def explain_llil(bv, llil_instruction):
         try:
             return explanations[llil_instruction.operation.name].format(llil=preprocess(bv, llil_instruction))
         except AttributeError:
-            print("Bad Format String")
+            log_error("Bad Format String in binja_explain_instruction")
             traceback.print_exc()
             return llil_instruction.operation.name
-    print("We don't understand", llil_instruction.operation.name, "yet")
+    log_info("binja_explain_instruction doen't understand " + llil_instruction.operation.name + " yet")
     return llil_instruction.operation.name

@@ -3,8 +3,6 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontDatabase, QFont
 
-from x86 import get_doc_url
-
 mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
 The MLIL instruction shown may not correspond to this instruction
 alone, or this instruction may not have a direct MLIL equivalent."""
@@ -14,6 +12,9 @@ def make_hline():
     out.setFrameShape(QtWidgets.QFrame.HLine)
     out.setFrameShadow(QtWidgets.QFrame.Sunken)
     return out
+
+def __None__(*args):
+    return None
 
 class ExplanationWindow(QtWidgets.QWidget):
     """ Displays a brief explanation of what an instruction does """
@@ -85,6 +86,8 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self.setObjectName('Explain_Window')
 
+        self.get_doc_url = __None__
+
     @property
     def instruction(self):
         return self._instruction.text()
@@ -108,7 +111,7 @@ class ExplanationWindow(QtWidgets.QWidget):
     @instruction.setter
     def instruction(self, instr):
         if instr is not None:
-            url = get_doc_url(instr.tokens[0])
+            url = self.get_doc_url(instr.tokens[0])
             if url is not None:
                 self._instruction.setText('<a href=\"{}\">{}</a>'.format(url, instr.tokens[0]) + ''.join(str(token) for token in instr.tokens[1:]).replace('    ', ' '))
             else:
@@ -153,6 +156,6 @@ class ExplanationWindow(QtWidgets.QWidget):
     @state.setter
     def state(self, state_list):
         if state_list is not None:
-            self._stateDisplay.setPlainText('\n\n'.join(state_list))
+            self._stateDisplay.setPlainText('\n'.join(state_list))
         else:
             self.state_Display.setPlainText('None')

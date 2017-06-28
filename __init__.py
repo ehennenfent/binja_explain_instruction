@@ -8,9 +8,12 @@ from explain import explain_llil
 app = QApplication.instance()
 main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
 
+from x86 import get_doc_url
+
 def init_gui():
     if not hasattr(main_window, 'explain_window'):
         main_window.explain_window = ExplanationWindow()
+        main_window.explain_window.get_doc_url = get_doc_url
     main_window.explain_window.show()
 
 def get_function_at(bv, addr):
