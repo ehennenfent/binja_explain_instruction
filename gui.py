@@ -14,7 +14,7 @@ def make_hline():
     return out
 
 def __None__(*args):
-    return None
+    return None, None
 
 class ExplanationWindow(QtWidgets.QWidget):
     """ Displays a brief explanation of what an instruction does """
@@ -34,10 +34,21 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self._instruction = QtWidgets.QLabel()
         self._instruction.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._instruction.setTextFormat(Qt.RichText)
-        self._instruction.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        self._instruction.setOpenExternalLinks(True)
         self._layout.addWidget(self._instruction)
+
+        self._layout.addWidget(make_hline())
+
+        self._labelF = QtWidgets.QLabel()
+        self._labelF.setText("Short Form:")
+        self._labelF.setFont(self._labelFont)
+        self._layout.addWidget(self._labelF)
+
+        self._shortForm = QtWidgets.QLabel()
+        self._shortForm.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._shortForm.setTextFormat(Qt.RichText)
+        self._shortForm.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self._shortForm.setOpenExternalLinks(True)
+        self._layout.addWidget(self._shortForm)
 
         self._layout.addWidget(make_hline())
 
@@ -114,13 +125,12 @@ class ExplanationWindow(QtWidgets.QWidget):
     @instruction.setter
     def instruction(self, instr):
         if instr is not None:
-            url = self.get_doc_url(instr.tokens[0])
-            if url is not None:
-                self._instruction.setText('<a href=\"{}\">{}</a>'.format(url, instr.tokens[0]) + ''.join(str(token) for token in instr.tokens[1:]).replace('    ', ' '))
-            else:
-                self._instruction.setText(''.join(str(token) for token in instr.tokens).replace('    ', ' '))
+            short_form, url = self.get_doc_url(instr.tokens[0])
+            self._instruction.setText(''.join(str(token) for token in instr.tokens).replace('    ', ' '))
+            self._shortForm.setText("<a href=\"{href}\">{form}</a>".format(href=url, form=short_form))
         else:
             self._instruction.setText('None')
+            self._shortForm.setText('None')
 
     @description.setter
     def description(self, desc_list):
