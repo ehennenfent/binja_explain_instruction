@@ -55,11 +55,11 @@ def explain_instruction(bv, addr):
     init_gui()
 
     func = get_function_at(bv, addr)
-    llil_list = find_in_IL(func.low_level_il.non_ssa_form, addr)
+    llil_list = find_in_IL(func.lifted_il.non_ssa_form, addr)
 
     main_window.explain_window.instruction = inst_in_func(func, addr)
     main_window.explain_window.description = [explain_llil(bv, llil) for llil in llil_list]
-    main_window.explain_window.llil = [dereference_symbols(bv, llil) for llil in llil_list]
+    main_window.explain_window.llil = [dereference_symbols(bv, llil) for llil in find_in_IL(func.low_level_il.non_ssa_form, addr)]
     main_window.explain_window.mlil = [dereference_symbols(bv, mlil) for mlil in find_in_IL(func.medium_level_il.non_ssa_form, addr)]
     main_window.explain_window.state = get_state(bv, addr)
 
