@@ -29,11 +29,12 @@ def find_in_IL(il, addr):
     return out
 
 def inst_in_func(func, addr):
+    out = None
     for block in func:
         for i in block.disassembly_text:
             if i.address == addr:
-                return i
-    return None
+                out = i
+    return out
 
 def dereference_symbols(bv, il_instruction):
     if il_instruction is not None:

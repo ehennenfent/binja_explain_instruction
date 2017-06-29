@@ -44,7 +44,6 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._layout.addWidget(self._labelF)
 
         self._shortForm = QtWidgets.QLabel()
-        self._shortForm.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
         self._shortForm.setTextFormat(Qt.RichText)
         self._shortForm.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self._shortForm.setOpenExternalLinks(True)
