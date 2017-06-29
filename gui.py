@@ -47,6 +47,7 @@ class ExplanationWindow(QtWidgets.QWidget):
         self._layout.addWidget(self._labelB)
 
         self._description = QtWidgets.QLabel()
+        self._description.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._description)
 
         self._layout.addWidget(make_hline())
@@ -58,6 +59,7 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self._LLIL = QtWidgets.QLabel()
         self._LLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._LLIL)
 
         self._layout.addWidget(make_hline())
@@ -70,6 +72,7 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self._MLIL = QtWidgets.QLabel()
         self._MLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._MLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._MLIL)
 
         self._layout.addWidget(make_hline())

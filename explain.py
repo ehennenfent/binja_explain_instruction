@@ -2,6 +2,7 @@ import json, os, traceback
 from binaryninja import LowLevelILOperation, LowLevelILInstruction, log_info, log_error
 
 expr_attrs = ['src', 'dest', 'hi', 'lo', 'left', 'right', 'condition']
+no_paren = [LowLevelILOperation.LLIL_CONST, LowLevelILOperation.LLIL_REG, LowLevelILOperation.LLIL_POP]
 
 with open(os.path.expanduser("~") + '/.binaryninja/plugins/binja_explain_instruction/' + 'explanations_en.json', 'r') as explanation_file:
     explanations = json.load(explanation_file)
@@ -35,7 +36,7 @@ def preprocess(bv, llil_instruction):
         if hasattr(llil_instruction, attr):
             unexplained = llil_instruction.__getattribute__(attr)
             if type(unexplained) == LowLevelILInstruction:
-                llil_instruction.__setattr__(attr, explain_llil(bv, unexplained))
+                llil_instruction.__setattr__(attr, ("{}" if unexplained.operation in no_paren else "({})").format( explain_llil(bv, unexplained) ))
     return llil_instruction
 
 def explain_llil(bv, llil_instruction):
