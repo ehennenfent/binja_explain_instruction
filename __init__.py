@@ -5,7 +5,7 @@ from binaryninja import LowLevelILOperation, PluginCommand
 from gui import ExplanationWindow
 from instruction_state import get_state
 from explain import explain_llil
-from util import get_function_at, find_in_IL, inst_in_func, dereference_symbols
+from util import get_function_at, find_mlil, find_llil, find_lifted_il, inst_in_func, dereference_symbols
 
 app = QApplication.instance()
 if app is None:
@@ -49,9 +49,9 @@ def explain_instruction(bv, addr):
     # Get the relevant information for this address
     func = get_function_at(bv, addr)
     instruction = inst_in_func(func, addr)
-    lifted_il_list = find_in_IL(func.lifted_il.non_ssa_form, addr)
-    llil_list = find_in_IL(func.low_level_il.non_ssa_form, addr)
-    mlil_list = find_in_IL(func.medium_level_il.non_ssa_form, addr)
+    lifted_il_list = find_lifted_il(func, addr)
+    llil_list = find_llil(func, addr)
+    mlil_list = find_mlil(func, addr)
 
     # Typically, we use the Lifted IL for explaining instructions, which is a form of Low-Level IL that is somewhat simpler
     # than what's displayed in the Low-Level IL view, and has a closer mapping to individual assembly instructions. However,
