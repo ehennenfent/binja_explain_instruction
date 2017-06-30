@@ -41,6 +41,9 @@ The Medium Level IL functions at a significantly higher level than the Lifted IL
 
 This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does not rely on any strictly os-dependent code, it will likely work on other platforms.
 
+## Origins
+This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program.
+
 ## Contributing
 This plugin is designed to make it simple to add support for new LLIL instructions or additional architectures. See [CONTRIBUTING.md](https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md). If you come across any inaccuracies, feel free to file a pull request or create an issue.
 
