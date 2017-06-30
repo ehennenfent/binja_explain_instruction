@@ -1,8 +1,11 @@
 def get_function_at(bv, addr):
+    """ Gets the function that contains a given address, even if that address
+    isn't the start of the function """
     blocks = bv.get_basic_blocks_at(addr)
     return blocks[0].function if blocks is not None else None
 
 def find_in_IL(il, addr):
+    """ Finds everything at the given address within the IL function passed in """
     out = []
     for block in il:
         for i in block:
@@ -11,6 +14,7 @@ def find_in_IL(il, addr):
     return out
 
 def inst_in_func(func, addr):
+    """ Finds an assembly function at the address given """
     out = None
     for block in func:
         for i in block.disassembly_text:
@@ -19,6 +23,9 @@ def inst_in_func(func, addr):
     return out
 
 def dereference_symbols(bv, il_instruction):
+    """ If the instruction contains anything that looks vaguely like a hex
+    number, see if there's a function there, and if so, replace it with the
+    function symbol."""
     if il_instruction is not None:
         out = []
         for item in il_instruction.tokens:

@@ -2536,7 +2536,7 @@ instrs = {
            {'instr': 'REPZ',
             'link': 'http://x86.renejeschke.de/html/file_module_x86_id_279.html',
             'short': 'Repeat String Operation Prefix'}],
- 'RET': [{'instr': 'RET',
+ 'RETN': [{'instr': 'RET',
            'link': 'http://www.felixcloutier.com/x86/RET.html',
            'short': 'Return from Procedure'},
           {'instr': 'RET',
@@ -3323,6 +3323,8 @@ regexes = {
 reg_cache = {}
 
 def find_proper_name(instruction):
+    global reg_cache # This file is so big, pylint can't even yell at me about using globals
+    """ Matches Jcc, CMOVcc, etc to their proper indices in the documentation dict """
     out = str(instruction).strip().upper()
     for regex in regexes:
         if regex not in reg_cache:
@@ -3334,11 +3336,14 @@ def find_proper_name(instruction):
     return out
 
 def get_doc_url(i):
-    print(i)
-    names = find_proper_name(i[0]).split(' ')
+    """ Takes in the instruction tokens and returns [(short form, doc url)] """
+    names = find_proper_name(i[0]).split(' ') # handles instruction prefixes
     output = []
     for name in names:
         if name in instrs.keys():
             inst_data = instrs[name][0]
             output.append((inst_data['short'], inst_data['link']))
+    # For 90% of instructions, output could just be a tuple and we could be done with it.
+    # However, the lock and rep* prefixes should be documented too (to prevent major "WTH" moments)
+    # so we have to structure everything around having a list of results
     return output

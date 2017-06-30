@@ -16,10 +16,9 @@
 # ==== CHANGES ====
 # Altered return value for get_state so it's useful outside of this module
 # Removed plugin registration
+# Altered imports
 
-import os
-import sys
-from binaryninja import *
+from binaryninja import MediumLevelILOperation, RegisterValueType
 
 def IsRegisterValueInteresting(reg):
     return reg.type == RegisterValueType.ConstantValue or \
