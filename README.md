@@ -52,4 +52,4 @@ This plugin incorporates [code by Ryan Stortz (@withzombies)](https://gist.githu
 
 ## Dependencies
 * PyQt5
-* Binary Ninjas
+* Binary Ninja
