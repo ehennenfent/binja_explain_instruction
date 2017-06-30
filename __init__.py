@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, qApp
 from PyQt5.QtCore import QCoreApplication
-from binaryninja import *
+from binaryninja import LowLevelILOperation, PluginCommand
 
 from gui import ExplanationWindow
 from instruction_state import get_state

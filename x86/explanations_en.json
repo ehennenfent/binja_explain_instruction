@@ -1,0 +1,4 @@
+{
+  "cmp": "Subtracts {instr.right} from {instr.left} and discards the result, but sets the CPU flags accordingly.",
+  "test": "Takes the logical and of {instr.right} and {instr.left} and discards the result, but sets the CPU flags accordingly."
+}
