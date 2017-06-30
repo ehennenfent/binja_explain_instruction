@@ -3320,18 +3320,25 @@ regexes = {
     'FCMOV[A-Z][A-Z]?[A-Z]?': 'FCMOVcc',
     }
 
+reg_cache = {}
+
 def find_proper_name(instruction):
-    out = str(instruction).upper()
+    out = str(instruction).strip().upper()
     for regex in regexes:
-        reg = re.compile(regex)
+        if regex not in reg_cache:
+            reg_cache[regex] = re.compile(regex)
+        reg = reg_cache[regex]
         if reg.match(out):
             out = regexes[regex]
             break
     return out
 
 def get_doc_url(i):
-    name = find_proper_name(i)
-    if not name in instrs.keys():
-        return None, None
-    inst_data = instrs[name][0]
-    return inst_data['short'], inst_data['link']
+    print(i)
+    names = find_proper_name(i[0]).split(' ')
+    output = []
+    for name in names:
+        if name in instrs.keys():
+            inst_data = instrs[name][0]
+            output.append((inst_data['short'], inst_data['link']))
+    return output

@@ -14,7 +14,7 @@ def make_hline():
     return out
 
 def __None__(*args):
-    return None, None
+    return "No documentation available", "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md"
 
 class ExplanationWindow(QtWidgets.QWidget):
     """ Displays a brief explanation of what an instruction does """
@@ -124,9 +124,9 @@ class ExplanationWindow(QtWidgets.QWidget):
     @instruction.setter
     def instruction(self, instr):
         if instr is not None:
-            short_form, url = self.get_doc_url(instr.tokens[0])
+            docs = self.get_doc_url(instr.tokens)
             self._instruction.setText(''.join(str(token) for token in instr.tokens).replace('    ', ' '))
-            self._shortForm.setText("<a href=\"{href}\">{form}</a>".format(href=url, form=short_form))
+            self._shortForm.setText('<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=short_form) for short_form, url in docs))
         else:
             self._instruction.setText('None')
             self._shortForm.setText('None')
