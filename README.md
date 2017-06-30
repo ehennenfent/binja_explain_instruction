@@ -41,7 +41,7 @@ Since this project is based on the Low-Level intermediate language, it may provi
 
 The Medium Level IL functions at a significantly higher level than the Lifted IL, which means that each MLIL instruction is typically the product of several LLIL instructions. The "equivalent" MLIL for an instruction is displayed when available, as it is particularly helpful for understanding what parameters are passed to a function, but **don't assume a 1-to-1 equivalency between the MLIL and the assembly**. Use it for a helpful cross reference, or consult the MLIL view for a high-level overview of the entire program.
 
-This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does not rely on any strictly os-dependent code, it will likely work on other platforms.
+This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does not rely on any strictly os-dependent code, it will likely work on other platforms. Currently, on Mac OS X, there are some issues with attaching to the main Binary Ninja window that are being investigated. 
 
 ## Origins
 This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program.
