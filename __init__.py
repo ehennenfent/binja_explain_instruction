@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, qApp
+from PyQt5.QtCore import QCoreApplication
 from binaryninja import *
 
 from gui import ExplanationWindow
@@ -7,7 +8,14 @@ from explain import explain_llil
 from util import get_function_at, find_in_IL, inst_in_func, dereference_symbols
 
 app = QApplication.instance()
-main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
+if app is None:
+    app = QCoreApplication.instance()
+if app is None:
+    app = qApp
+try:
+    main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
+except IndexError:
+    raise Exception("Could not attach to main window!")
 
 arch = None
 architecture_specific_explanation_function = lambda _ : False, "Not Available"
