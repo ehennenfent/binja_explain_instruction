@@ -1,5 +1,6 @@
 import json, traceback
 from binaryninja import user_plugin_path, log_error
+from ..explain import explain_llil
 
 with open(user_plugin_path + '/binja_explain_instruction/x86/explanations_en.json', 'r') as explanation_file:
     explanations = json.load(explanation_file)
@@ -15,10 +16,10 @@ class AttrDict(dict):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
-def preprocess_cmp(_bv, _parsed, lifted_il_instrs):
+def preprocess_cmp(bv, _parsed, lifted_il_instrs):
     """ Add IL tokens to make the message less generic """
     il = lifted_il_instrs[0]
-    return AttrDict({'left': il.left, 'right': il.right})
+    return AttrDict({'left': explain_llil(bv, il.left), 'right': explain_llil(bv, il.right)})
 
 # Map instructions to function pointers
 preprocess_dict = {

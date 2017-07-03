@@ -61,7 +61,7 @@ def explain_instruction(bv, addr):
     # than what's displayed in the Low-Level IL view, and has a closer mapping to individual assembly instructions. However,
     # Lifted IL doesn't fold conditionals into conditional jumps, so in cases like that, for clarity's sake we use the
     # Low-Level IL from the low_level_il attribute instead.
-    contains_dependent_instruction = True in [(llil.operation in use_low_level_instead_of_lifted) for llil in llil_list]
+    contains_dependent_instruction = True in [(llil.operation in use_low_level_instead_of_lifted) for llil in lifted_il_list]
 
     # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
     # over the one generated via the LLIL
