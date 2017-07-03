@@ -4,7 +4,7 @@ This plugin adds a popup window to Binary Ninja that explains in simple English 
 ### Read the Limitations section in detail before using this plugin, or you may find it confuses you more than it helps you.
 
 ## Assumed Knowledge Level
-The descriptions are intended to be simple enough for a novice to understand. However, there is some previous knowledge assumed, notably that the reader understands the concepts of a register, an instruction, the stack, etc.
+The descriptions are intended to be simple enough for a novice to understand. However, there is some previous knowledge assumed, notably that the reader understands the concepts of a register, an instruction, the stack, etc. Consider taking a look at [Beginners.re](https://beginners.re/) if you need help with the background.
 
 ## Examples
 The explanations are closer to English than the notation used in Binary Ninja, but may sometimes be strangely worded due to the fact that they are programmatically generated.
@@ -41,7 +41,7 @@ Since this project is based on the Low-Level intermediate language, it may provi
 
 The Medium Level IL functions at a significantly higher level than the Lifted IL, which means that each MLIL instruction is typically the product of several LLIL instructions. The "equivalent" MLIL for an instruction is displayed when available, as it is particularly helpful for understanding what parameters are passed to a function, but **don't assume a 1-to-1 equivalency between the MLIL and the assembly**. Use it for a helpful cross reference, or consult the MLIL view for a high-level overview of the entire program.
 
-This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does not rely on any strictly os-dependent code, it will likely work on other platforms. Currently, on Mac OS X, there are some issues with attaching to the main Binary Ninja window that are being investigated. 
+This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does not rely on any strictly os-dependent code, it will likely work on other platforms. Currently, on Mac OS X, there are some issues with attaching to the main Binary Ninja window that are being investigated.
 
 ## Origins
 This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program.
