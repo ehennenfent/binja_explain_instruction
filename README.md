@@ -46,7 +46,8 @@ The Medium Level IL functions at a significantly higher level than the Lifted IL
 This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does not rely on any strictly os-dependent code, it will likely work on other platforms. Currently, on Mac OS X, there are some issues with attaching to the main Binary Ninja window that are being investigated.
 
 ## Installation
-Clone this repository into your [Binary Ninja Plugins Folder](https://github.com/Vector35/binaryninja-api/tree/dev/python/examples#loading-plugins)
+1. Install PyQt5 for your platform (`apt install python-pyqt5` on Ubuntu)
+2. Clone this repository into your [Binary Ninja Plugins Folder](https://github.com/Vector35/binaryninja-api/tree/dev/python/examples#loading-plugins)
 
 ## Origins
 This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program.
