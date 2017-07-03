@@ -1,3 +1,7 @@
+import sys
+if (sys.platform == 'win32'):
+    sys.path.append("C:\\Python27\\lib\\site-packages")
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, qApp
 from PyQt5.QtCore import QCoreApplication
 from binaryninja import LowLevelILOperation, PluginCommand

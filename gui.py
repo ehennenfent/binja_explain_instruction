@@ -1,4 +1,9 @@
 from __future__ import print_function
+
+import sys
+if (sys.platform == 'win32'):
+    sys.path.append("C:\\Python27\\lib\\site-packages")
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontDatabase, QFont
