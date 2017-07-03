@@ -13,7 +13,7 @@ The MLIL instruction shown may not correspond to this instruction
 alone, or this instruction may not have a direct MLIL equivalent."""
 
 def make_hline():
-    out =QtWidgets.QFrame()
+    out = QtWidgets.QFrame()
     out.setFrameShape(QtWidgets.QFrame.HLine)
     out.setFrameShadow(QtWidgets.QFrame.Sunken)
     return out
