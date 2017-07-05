@@ -11,6 +11,8 @@ from instruction_state import get_state
 from explain import explain_llil
 from util import get_function_at, find_mlil, find_llil, find_lifted_il, inst_in_func, dereference_symbols
 
+import traceback
+
 app = QApplication.instance()
 if app is None:
     app = QCoreApplication.instance()
@@ -22,7 +24,7 @@ except IndexError:
     raise Exception("Could not attach to main window!")
 
 arch = None
-architecture_specific_explanation_function = lambda _ : False, "Not Available"
+architecture_specific_explanation_function = lambda *_: (False, "Not available")
 
 # See comment beginning on line 48
 use_low_level_instead_of_lifted = [LowLevelILOperation.LLIL_IF]
@@ -41,7 +43,7 @@ def init_plugin(bv):
             import x86, x86.explain
             main_window.explain_window.get_doc_url = x86.get_doc_url
             architecture_specific_explanation_function = x86.explain.arch_explain_instruction
-        elif 'your_architecture_here' in bv.arch.name: # Placeholder for additional arcitectures
+        elif 'your_architecture_here' in bv.arch.name: # Placeholder for additional architectures
             pass
         arch = bv.arch.name
     main_window.explain_window.show()
@@ -68,7 +70,10 @@ def explain_instruction(bv, addr):
     should_supersede_llil, explanation = architecture_specific_explanation_function(bv, instruction, lifted_il_list)
 
     # Display the raw instruction
-    main_window.explain_window.instruction = instruction
+    try:
+        main_window.explain_window.instruction = instruction
+    except Exception:
+        traceback.print_exc()
 
     if explanation is not None:
         if should_supersede_llil:
