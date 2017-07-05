@@ -36,10 +36,12 @@ def find_in_IL(il, first):
 
 def inst_in_func(func, addr):
     """ Finds an assembly function at the address given """
+    out = None
     for block in func:
         for i in block.disassembly_text:
             if i.address == addr:
-                return i
+                out = i
+    return out
 
 def dereference_symbols(bv, il_instruction):
     """ If the instruction contains anything that looks vaguely like a hex
