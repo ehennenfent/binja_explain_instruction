@@ -3337,7 +3337,7 @@ def find_proper_name(instruction):
 
 def get_doc_url(i):
     """ Takes in the instruction tokens and returns [(short form, doc url)] """
-    names = find_proper_name(i[0]).split(' ') # handles instruction prefixes
+    names = map(find_proper_name, i) # handles instruction prefixes
     output = []
     for name in names:
         if name in instrs.keys():
