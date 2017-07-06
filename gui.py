@@ -129,8 +129,8 @@ class ExplanationWindow(QtWidgets.QWidget):
     @instruction.setter
     def instruction(self, instr):
         if instr is not None:
-            docs = self.get_doc_url(instr.tokens)
-            self._instruction.setText(''.join(str(token) for token in instr.tokens).replace('    ', ' '))
+            docs = self.get_doc_url(instr.split(' '))
+            self._instruction.setText(instr.replace('    ', ' '))
             self._shortForm.setText('<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=short_form) for short_form, url in docs))
         else:
             self._instruction.setText('None')
