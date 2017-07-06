@@ -7,7 +7,7 @@
   "LLIL_NOP": "No Operation",
   "LLIL_GOTO": "Jumps to the instruction at {llil.dest}",
   "LLIL_JUMP": "Jumps to the instruction at {llil.dest}",
-  "LLIL_IF": "Jumps to {llil.dest} if the CPU flags indicate that {llil.condition}",
+  "LLIL_IF": "Jumps to {llil.true} if the CPU flags indicate that {llil.condition}, otherwise, falls through to {llil.false}",
   "LLIL_LOAD": "the {llil.size} bytes of memory starting at {llil.src}",
   "LLIL_UNIMPL": "Binja doesn't understand this instruction yet. Please consult the architecture documentation.",
   "LLIL_UNIMPL_MEM": "Binja doesn't understand this instruction yet. Please consult the architecture documentation.",

@@ -84,7 +84,7 @@ def explain_instruction(bv, addr):
             main_window.explain_window.description = [explanation] + [explain_llil(bv, llil) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
     else:
         # By default, we just use the LLIL explanation
-        main_window.explain_window.description = [explain_llil(bv, llil) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
+        main_window.explain_window.description = [((str(llil.instr_index) + ': ' if contains_dependent_instruction else '') + explain_llil(bv, llil)) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
 
     # Display the MLIL and LLIL, dereferencing anything that looks like a hex number into a symbol if possible
     main_window.explain_window.llil = [dereference_symbols(bv, llil) for llil in llil_list]
