@@ -1,5 +1,6 @@
 import json, traceback
 from binaryninja import LowLevelILOperation, LowLevelILInstruction, log_info, log_error, user_plugin_path
+from util import *
 
 # Instruction attributes that can contain nested LLIL instructions (see preprocess)
 expr_attrs = ['src', 'dest', 'hi', 'lo', 'left', 'right', 'condition']
@@ -28,16 +29,24 @@ def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
     llil_instruction.condition = explanations[llil_instruction.condition.name]
     return llil_instruction
 
-def preprocess_jump(_bv, llil_instruction):
+def preprocess_LLIL_GOTO(bv, llil_instruction):
     """ Replaces integer addresses with tokens """
-    llil_instruction.dest = llil_instruction.tokens[-1]
+    llil = get_function_at(bv, llil_instruction.address).low_level_il
+    llil_instruction.dest = hex(llil[llil_instruction.dest].address).replace("L","")
+    return llil_instruction
+
+def preprocess_LLIL_IF(bv, llil_instruction):
+    """ Replaces integer addresses with tokens """
+    llil = get_function_at(bv, llil_instruction.address).low_level_il
+    llil_instruction.true = hex(llil[llil_instruction.true].address).replace("L","")
+    llil_instruction.false = hex(llil[llil_instruction.false].address).replace("L","")
     return llil_instruction
 
 # Map LLIL operation names to function pointers
 preprocess_dict = {
     "LLIL_CALL": preprocess_LLIL_CALL,
-    "LLIL_IF": preprocess_jump, # I've only ever seen this used for conditional jumps
-    "LLIL_GOTO": preprocess_jump, # Unconditional jumps
+    "LLIL_IF": preprocess_LLIL_IF, # I've only ever seen this used for conditional jumps
+    "LLIL_GOTO": preprocess_LLIL_GOTO, # Unconditional jumps
     "LLIL_CONST": preprocess_LLIL_CONST,
     "LLIL_CONST_PTR": preprocess_LLIL_CONST, # Seems to refer to a constant in .data - could consider dereferencing these
     "LLIL_FLAG_COND": preprocess_LLIL_FLAG_COND
