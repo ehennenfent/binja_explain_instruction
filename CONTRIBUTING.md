@@ -8,6 +8,6 @@ Like the LLIL instructions, adding a new x86 instruction can be as simple as add
 ### Adding new architectures
 1. Create a new submodule (`cp -rf x86 my_new_architecture` or something like that)
 2. In `my_new_architecture/__init__.py` create a function that takes in an instruction as a list of tokens and returns a list of tuples, each containing the short name for an instruction and a url for the documentation.
-3. In `my_new_architecture/explain.py` create a function that takes in an instruction as a list of tokens and returns a boolean indicating whether the description returned should prepend or replace the LLIL explanation and string explaining that instruction.
+3. In `my_new_architecture/explain.py` create a function that takes in an instruction as a list of tokens and returns a boolean indicating whether the description returned should prepend or replace the LLIL explanation and a list of strings explaining that instruction.
  * If you decide to use the existing `arch_explain_instruction` function in `x86/explain.py`, you can simply add instructions to `x86/explanations_en.json` to have them automatically preempt the default explanation.
 4. In `__init__.py` modify the `init_plugin` function to import the functions for your architecture and bind them to the relevant variables

@@ -24,7 +24,7 @@ except IndexError:
     raise Exception("Could not attach to main window!")
 
 arch = None
-architecture_specific_explanation_function = lambda *_: (False, "Not available")
+architecture_specific_explanation_function = lambda *_: (False, ["Architecture-specific explanations unavailable"])
 
 # See comment beginning on line 48
 use_low_level_instead_of_lifted = [LowLevelILOperation.LLIL_IF]
@@ -67,7 +67,7 @@ def explain_instruction(bv, addr):
 
     # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
     # over the one generated via the LLIL
-    should_supersede_llil, explanation = architecture_specific_explanation_function(bv, instruction, lifted_il_list)
+    should_supersede_llil, explanation_list = architecture_specific_explanation_function(bv, instruction, lifted_il_list)
 
     # Display the raw instruction
     try:
@@ -75,15 +75,16 @@ def explain_instruction(bv, addr):
     except Exception:
         traceback.print_exc()
 
-    if explanation is not None:
+    if len(explanation_list) > 0:
         if should_supersede_llil:
             # If we got an architecture-specific explanation and it should supersede the LLIL, use that
-            main_window.explain_window.description = [explanation]
+            main_window.explain_window.description = [explanation for explanation in explanation_list]
         else:
             # Otherwise, just prepend the arch-specific explanation to the LLIL explanation
-            main_window.explain_window.description = [explanation] + [explain_llil(bv, llil) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
+            main_window.explain_window.description = [explanation for explanation in explanation_list] + [((str(llil.instr_index) + ': ' if contains_dependent_instruction else '') + explain_llil(bv, llil)) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
     else:
         # By default, we just use the LLIL explanation
+        # We append the line number if we're displaying a conditional.
         main_window.explain_window.description = [((str(llil.instr_index) + ': ' if contains_dependent_instruction else '') + explain_llil(bv, llil)) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
 
     # Display the MLIL and LLIL, dereferencing anything that looks like a hex number into a symbol if possible

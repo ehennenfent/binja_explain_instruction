@@ -1,6 +1,8 @@
 import json, traceback
 from binaryninja import user_plugin_path, log_error
 from ..explain import explain_llil
+from ..util import *
+from . import find_proper_name
 
 with open(user_plugin_path + '/binja_explain_instruction/x86/explanations_en.json', 'r') as explanation_file:
     explanations = json.load(explanation_file)
@@ -21,10 +23,28 @@ def preprocess_cmp(bv, _parsed, lifted_il_instrs):
     il = lifted_il_instrs[0]
     return AttrDict({'left': explain_llil(bv, il.left), 'right': explain_llil(bv, il.right)})
 
+def preprocess_setcc(bv, _parsed, lifted_il_instrs):
+    """ Replace instruction references with actual operations """
+    il = lifted_il_instrs[0]
+    lifted = get_function_at(bv, il.address).lifted_il
+    t, f = lifted[il.true], lifted[il.false]
+    low_level = find_llil(get_function_at(bv, il.address), il.address)
+    return AttrDict({'true': explain_llil(bv, t), 'false': explain_llil(bv, f).lower(), 'condition': explain_llil(bv, low_level[0].condition)})
+
+def preprocess_cmovcc(bv, _parsed, lifted_il_instrs):
+    """ Replace instruction references with actual operations """
+    il = lifted_il_instrs[0]
+    lifted = get_function_at(bv, il.address).lifted_il
+    t = lifted[il.true]
+    low_level = find_llil(get_function_at(bv, il.address), il.address)
+    return AttrDict({'true': explain_llil(bv, t), 'condition': explain_llil(bv, low_level[0].condition)})
+
 # Map instructions to function pointers
 preprocess_dict = {
     "cmp": preprocess_cmp,
     "test": preprocess_cmp,
+    "setcc": preprocess_setcc,
+    "cmovcc": preprocess_cmovcc,
 }
 
 def parse_instruction(_bv, instruction, _lifted_il_instrs):
@@ -32,9 +52,8 @@ def parse_instruction(_bv, instruction, _lifted_il_instrs):
     tokens = filter(lambda x : len(x) > 0, [str(token).strip().replace(',', '') for token in str(instruction).split(' ')])
     return tokens
 
-def preprocess(bv, parsed, lifted_il_instrs):
+def preprocess(bv, parsed, lifted_il_instrs, name):
     """ Apply preprocess functions to instructions """
-    name = parsed[0]
     if name in preprocess_dict:
         out = preprocess_dict[name](bv, parsed, lifted_il_instrs)
         return out if out is not None else AttrDict({'name': name})
@@ -43,18 +62,22 @@ def preprocess(bv, parsed, lifted_il_instrs):
 def arch_explain_instruction(bv, instruction, lifted_il_instrs):
     """ Returns the explanation string from explanations_en.json, formatted with the preprocessed instruction token list """
     if instruction is None:
-        return False, None
+        return False, []
     parsed = parse_instruction(bv, instruction, lifted_il_instrs)
     if(len(parsed) == 0):
-        return False, None
-    name = parsed[0]
-    if name in explanations:
-        try:
-            # Get the string from the JSON and format it
-            return name not in dont_supersede_llil, explanations[name].format(instr=preprocess(bv, parsed, lifted_il_instrs))
-        except AttributeError:
-            # Usually a bad format string. Shouldn't show up unless something truly weird happens.
-            log_error("Bad Format String in binja_explain_instruction")
-            traceback.print_exc()
-            return False, name
-    return False, None
+        return False, []
+    out = []
+    out_bool = False
+    for name in parsed:
+        name = find_proper_name(name).lower()
+        if name in explanations:
+            try:
+                # Get the string from the JSON and format it
+                out_bool = out_bool or name not in dont_supersede_llil
+                out.append(explanations[name].format(instr=preprocess(bv, parsed, lifted_il_instrs, name)))
+            except (AttributeError, KeyError):
+                # Usually a bad format string. Shouldn't show up unless something truly weird happens.
+                log_error("Bad Format String in binja_explain_instruction")
+                traceback.print_exc()
+                out.append(name)
+    return out_bool, out
