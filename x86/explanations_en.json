@@ -4,5 +4,6 @@
   "cpuid": "Writes processor identification information into eax, ebx, ecx, and edx",
   "xgetbv": "Reads the contents of the extended control register (xcr) specified in the ecx register into registers edx:eax",
   "setcc": "{instr.true} if {instr.condition}, otherwise, {instr.false}",
-  "cmovcc": "{instr.true} if {instr.condition}"
+  "cmovcc": "{instr.true} if {instr.condition}",
+  "rdtsc": "Loads the current value of the processor's time-stamp counter into registers edx:eax"
 }

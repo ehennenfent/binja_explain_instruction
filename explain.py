@@ -30,13 +30,13 @@ def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
     return llil_instruction
 
 def preprocess_LLIL_GOTO(bv, llil_instruction):
-    """ Replaces integer addresses with tokens """
+    """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     llil = get_function_at(bv, llil_instruction.address).low_level_il
     llil_instruction.dest = hex(llil[llil_instruction.dest].address).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_IF(bv, llil_instruction):
-    """ Replaces integer addresses with tokens """
+    """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     llil = get_function_at(bv, llil_instruction.address).low_level_il
     llil_instruction.true = hex(llil[llil_instruction.true].address).replace("L","")
     llil_instruction.false = hex(llil[llil_instruction.false].address).replace("L","")
