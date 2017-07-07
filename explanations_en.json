@@ -67,6 +67,8 @@
   "LLIL_SET_FLAG": "set temporary flag {llil.dest} to {llil.src}",
   "LLIL_FLAG_BIT": "bit {llil.bit} of flag {llil.src}",
   "LLIL_TEST_BIT": "{llil.left} bitwise compared with {llil.right}",
+  "LLIL_LOW_PART": "the low {llil.size} bytes of memory at {llil.src}",
+  "LLIL_ADD_OVERFLOW": "<NOT IMPLEMENTED> Adds {llil.left} and {llil.right} with overflow",
   "LLFC_E": "equal",
   "LLFC_NE": "not equal",
   "LLFC_SLT": "signed less than",
