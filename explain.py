@@ -7,7 +7,7 @@ expr_attrs = ['src', 'dest', 'hi', 'lo', 'left', 'right', 'condition']
 # Types of instructions that we won't bother surrounding with parentheses because they don't
 # substantially clarify anything.
 no_paren = [LowLevelILOperation.LLIL_CONST, LowLevelILOperation.LLIL_REG,
-LowLevelILOperation.LLIL_CONST_PTR, LowLevelILOperation.LLIL_POP]
+LowLevelILOperation.LLIL_CONST_PTR, LowLevelILOperation.LLIL_POP, LowLevelILOperation.LLIL_FLAG]
 
 with open(user_plugin_path + '/binja_explain_instruction/explanations_en.json', 'r') as explanation_file:
     explanations = json.load(explanation_file)
@@ -42,14 +42,32 @@ def preprocess_LLIL_IF(bv, llil_instruction):
     llil_instruction.false = hex(llil[llil_instruction.false].address).replace("L","")
     return llil_instruction
 
+def preprocess_LLIL_FLAG(_bv, llil_instruction):
+    if llil_instruction.src.temp:
+        flag = llil_instruction.ssa_form.src
+        indx = llil_instruction.function.get_ssa_flag_definition(flag)
+        src = llil_instruction.function[indx]
+        llil_instruction.src = src.src
+    return llil_instruction
+
+def preprocess_LLIL_REG(_bv, llil_instruction):
+    if llil_instruction.src.temp:
+        reg = llil_instruction.ssa_form.src
+        indx = llil_instruction.function.get_ssa_reg_definition(reg)
+        src = llil_instruction.function[indx]
+        llil_instruction.src = src.src
+    return llil_instruction
+
 # Map LLIL operation names to function pointers
 preprocess_dict = {
     "LLIL_CALL": preprocess_LLIL_CALL,
-    "LLIL_IF": preprocess_LLIL_IF, # I've only ever seen this used for conditional jumps
+    "LLIL_IF": preprocess_LLIL_IF, # Conditional jumps
     "LLIL_GOTO": preprocess_LLIL_GOTO, # Unconditional jumps
     "LLIL_CONST": preprocess_LLIL_CONST,
     "LLIL_CONST_PTR": preprocess_LLIL_CONST, # Seems to refer to a constant in .data - could consider dereferencing these
-    "LLIL_FLAG_COND": preprocess_LLIL_FLAG_COND
+    "LLIL_FLAG_COND": preprocess_LLIL_FLAG_COND,
+    "LLIL_REG": preprocess_LLIL_REG, # Registers (including temporary)
+    "LLIL_FLAG": preprocess_LLIL_FLAG, # Temporary flags
 }
 
 def preprocess(bv, llil_instruction):
