@@ -26,9 +26,6 @@ except IndexError:
 arch = None
 architecture_specific_explanation_function = lambda *_: (False, ["Architecture-specific explanations unavailable"])
 
-# See comment beginning on line 48
-use_low_level_instead_of_lifted = [LowLevelILOperation.LLIL_IF]
-
 def init_plugin(bv):
     """ Creates the plugin window and sets up the architecture-specfic functions """
     global arch, architecture_specific_explanation_function
@@ -59,11 +56,9 @@ def explain_instruction(bv, addr):
     llil_list = find_llil(func, addr)
     mlil_list = find_mlil(func, addr)
 
-    # Typically, we use the Lifted IL for explaining instructions, which is a form of Low-Level IL that is somewhat simpler
-    # than what's displayed in the Low-Level IL view, and has a closer mapping to individual assembly instructions. However,
-    # Lifted IL doesn't fold conditionals into conditional jumps, so in cases like that, for clarity's sake we use the
-    # Low-Level IL from the low_level_il attribute instead.
-    contains_dependent_instruction = True in [(llil.operation in use_low_level_instead_of_lifted) for llil in lifted_il_list]
+    # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
+    # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
+    parse_il = llil_list if len(llil_list) > 0 else lifted_il_list
 
     # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
     # over the one generated via the LLIL
@@ -81,11 +76,11 @@ def explain_instruction(bv, addr):
             main_window.explain_window.description = [explanation for explanation in explanation_list]
         else:
             # Otherwise, just prepend the arch-specific explanation to the LLIL explanation
-            main_window.explain_window.description = [explanation for explanation in explanation_list] + [((str(llil.instr_index) + ': ' if contains_dependent_instruction else '') + explain_llil(bv, llil)) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
+            main_window.explain_window.description = [explanation for explanation in explanation_list] + [((str(llil.instr_index) + ': ' if (len(parse_il) > 1) else '') + explain_llil(bv, llil)) for llil in (parse_il)]
     else:
         # By default, we just use the LLIL explanation
         # We append the line number if we're displaying a conditional.
-        main_window.explain_window.description = [((str(llil.instr_index) + ': ' if contains_dependent_instruction else '') + explain_llil(bv, llil)) for llil in (llil_list if contains_dependent_instruction else lifted_il_list)]
+        main_window.explain_window.description = [((str(llil.instr_index) + ': ' if (len(parse_il) > 1) else '') + explain_llil(bv, llil)) for llil in parse_il]
 
     # Display the MLIL and LLIL, dereferencing anything that looks like a hex number into a symbol if possible
     main_window.explain_window.llil = [dereference_symbols(bv, llil) for llil in llil_list]
