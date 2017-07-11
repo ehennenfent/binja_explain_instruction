@@ -65,7 +65,7 @@ Jumps to 0x400a8f if the CPU flags indicate that ((rcx ^ rax) (at instruction 0x
 Wherever possible, this plugin attempts to fold the expressions responsible for setting these registers/flags back into the LLIL instruction before producing an explanation. This is done by consulting the SSA form of the LLIL (explained below) and backtracing to the instruction that set the value of the register/flag. However, since the expression might not evaluate to the same result if executed as part of the conditional expression instead of when it was originally executed, explanations produced in this manner are annotated with "(at address 0x*****)" to indicate that the expression shown should be interpreted as executed at the address it actually appears at in the program, not the address of the current instruction. In the above example, note the annotation of "at instruction 0x400a7f" to indicate that the value of `rcx` is not the same if evaluated at `0x400a88` as it is at `0x400a7f`.
 
 ##### Example 2
-Consider the instruction `idiv rxc`, which is lifted to the following LLIL:
+Consider the instruction `idiv rcx`, which is lifted to the following LLIL:
 ```
 115 @ 0x40069e  temp0.q = divs.dp.q(rdx:rax, rcx)
 116 @ 0x40069e  temp1.q = mods.dp.q(rdx:rax, rcx)
