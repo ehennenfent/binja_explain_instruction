@@ -39,7 +39,7 @@ For most instructions, this plugin parses the Low-Level IL that you may be used 
 
 The Low-Level IL occasionally uses temporary flags and registers to abstract application flow. This plugin takes steps to eliminate these from the explanations as much as possible. The measures taken are documented in the [IL Manifest](https://github.com/ehennenfent/binja_explain_instruction/blob/master/IL_MANIFEST.md).
 
-On occasion, certain x86 instructions may correspond to multiple LLIL instructions (or vice versa), which may require consulting the LLIL view in order to understand what the explanation means.
+On occasion, certain x86 instructions may correspond to multiple LLIL instructions (or vice versa), which may require consulting the LLIL view in order to understand what the explanation means. Additionally, in order to retrieve all the LLIL instructions corresponding to an x86 instruction, we need to iterate over all the instructions in the function. This may cause a temporary slowdown on large functions, depending on how fast your computer is.
 
 Since this project is based on the Low-Level intermediate language, it may provide useful results on architectures other than x86. However, this is completely untested, and unlikely to meet any reasonable standard of completeness. Pull requests to add support for additional architectures are very welcome!
 
