@@ -32,6 +32,7 @@ def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
 def preprocess_LLIL_GOTO(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     func = get_function_at(bv, llil_instruction.address)
+    # We have to use the lifted IL since the LLIL ignores comparisons and tests 
     lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_GOTO , find_lifted_il(func, llil_instruction.address)))[0]
     lifted_il = func.lifted_il
     llil_instruction.dest = hex(lifted_il[lifted_instruction.dest].address).replace("L","")
@@ -40,6 +41,7 @@ def preprocess_LLIL_GOTO(bv, llil_instruction):
 def preprocess_LLIL_IF(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     func = get_function_at(bv, llil_instruction.address)
+    # We have to use the lifted IL since the LLIL ignores comparisons and tests 
     lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(func, llil_instruction.address)))[0]
     lifted_il = func.lifted_il
     llil_instruction.true = hex(lifted_il[lifted_instruction.true].address).replace("L","")
@@ -63,6 +65,8 @@ def preprocess_LLIL_REG(_bv, llil_instruction):
         indx = llil_instruction.function.get_ssa_reg_definition(reg)
         src = llil_instruction.function[indx]
         llil_instruction.src = src.src
+        # Add a location flag so it's clear where in the program execution we actually got the source values from,
+        # in case they've changed since then
         llil_instruction.loc = " (at instruction {})".format(hex(src.address).replace("L",""))
     else:
         llil_instruction.loc = ""
@@ -115,6 +119,12 @@ def explain_llil(bv, llil_instruction):
 def fold_multi_il(_bv, llil_list):
     """ Filters out the setting of temporary registers and flags """
     out = []
+    # This doesn't do any "folding" right now. In the future, we could fold temporary variables into
+    # instructions that use them rather than seeking them in the preprocess functions, but there are some issues
+    # with this. Notably, there's no way to accurately represent atomic combinations of instructions without temporary
+    # variables, which means that we might present innacurate explanations if we just got rid of them entirely.
+    # It might be possible to detect those cases, or a hypothetical LLIL_ATOMIC operation could save us from having
+    # to think about it, but until I figure those out, this function is just going to be a simple filter.
     for llil in llil_list:
         if llil.operation == LowLevelILOperation.LLIL_SET_FLAG:
             pass
