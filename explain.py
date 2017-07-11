@@ -31,15 +31,19 @@ def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
 
 def preprocess_LLIL_GOTO(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
-    llil = get_function_at(bv, llil_instruction.address).lifted_il
-    llil_instruction.dest = hex(llil[llil_instruction.dest].address).replace("L","")
+    func = get_function_at(bv, llil_instruction.address)
+    lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_GOTO , find_lifted_il(func, llil_instruction.address)))[0]
+    lifted_il = func.lifted_il
+    llil_instruction.dest = hex(lifted_il[lifted_instruction.dest].address).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_IF(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
-    llil = get_function_at(bv, llil_instruction.address).lifted_il
-    llil_instruction.true = hex(llil[llil_instruction.true].address).replace("L","")
-    llil_instruction.false = hex(llil[llil_instruction.false].address).replace("L","")
+    func = get_function_at(bv, llil_instruction.address)
+    lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(func, llil_instruction.address)))[0]
+    lifted_il = func.lifted_il
+    llil_instruction.true = hex(lifted_il[lifted_instruction.true].address).replace("L","")
+    llil_instruction.false = hex(lifted_il[lifted_instruction.false].address).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_FLAG(_bv, llil_instruction):
