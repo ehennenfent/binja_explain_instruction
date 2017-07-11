@@ -66,7 +66,7 @@ def explain_instruction(bv, addr):
 
     # Display the raw instruction
     try:
-        main_window.explain_window.instruction = instruction
+        main_window.explain_window.instruction = "{addr}:  {inst}".format(addr=hex(addr).replace("L", ""), inst=instruction)
     except Exception:
         traceback.print_exc()
 

@@ -39,6 +39,7 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self._instruction = QtWidgets.QLabel()
         self._instruction.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._instruction.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._instruction)
 
         self._layout.addWidget(make_hline())
