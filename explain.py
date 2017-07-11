@@ -31,31 +31,37 @@ def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
 
 def preprocess_LLIL_GOTO(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
-    llil = get_function_at(bv, llil_instruction.address).low_level_il
+    llil = get_function_at(bv, llil_instruction.address).lifted_il
     llil_instruction.dest = hex(llil[llil_instruction.dest].address).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_IF(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
-    llil = get_function_at(bv, llil_instruction.address).low_level_il
+    llil = get_function_at(bv, llil_instruction.address).lifted_il
     llil_instruction.true = hex(llil[llil_instruction.true].address).replace("L","")
     llil_instruction.false = hex(llil[llil_instruction.false].address).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_FLAG(_bv, llil_instruction):
+    """ Follow back temporary flags and append the address where they're created """
     if llil_instruction.src.temp:
         flag = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
         src = llil_instruction.function[indx]
         llil_instruction.src = src.src
+    llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_REG(_bv, llil_instruction):
+    """ Follow back temporary registers and append the address where they're created """
     if llil_instruction.src.temp:
         reg = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_reg_definition(reg)
         src = llil_instruction.function[indx]
         llil_instruction.src = src.src
+        llil_instruction.loc = " (at instruction {})".format(hex(src.address).replace("L",""))
+    else:
+        llil_instruction.loc = ""
     return llil_instruction
 
 # Map LLIL operation names to function pointers
@@ -101,3 +107,15 @@ def explain_llil(bv, llil_instruction):
     # If there's anything in the LLIL that doesn't have an explanation, yell about it in the logs
     log_info("binja_explain_instruction doen't understand " + llil_instruction.operation.name + " yet")
     return llil_instruction.operation.name
+
+def fold_multi_il(_bv, llil_list):
+    """ Filters out the setting of temporary registers and flags """
+    out = []
+    for llil in llil_list:
+        if llil.operation == LowLevelILOperation.LLIL_SET_FLAG:
+            pass
+        elif llil.operation == LowLevelILOperation.LLIL_SET_REG and llil.dest.temp:
+            pass
+        else:
+            out.append(llil)
+    return out

@@ -146,6 +146,7 @@ class ExplanationWindow(QtWidgets.QWidget):
         for llil in llil_list:
             if llil is not None:
                 tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
+                newText += "{}: ".format(llil.instr_index)
                 newText += ''.join(str(token) for token in tokens)
             else:
                 newText += 'None'

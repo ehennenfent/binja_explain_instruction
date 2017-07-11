@@ -8,7 +8,7 @@ from binaryninja import LowLevelILOperation, PluginCommand
 
 from gui import ExplanationWindow
 from instruction_state import get_state
-from explain import explain_llil
+from explain import explain_llil, fold_multi_il
 from util import get_function_at, find_mlil, find_llil, find_lifted_il, inst_in_func, dereference_symbols
 
 import traceback
@@ -58,7 +58,7 @@ def explain_instruction(bv, addr):
 
     # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
     # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
-    parse_il = llil_list if len(llil_list) > 0 else lifted_il_list
+    parse_il = fold_multi_il(bv, llil_list if len(llil_list) > 0 else lifted_il_list)
 
     # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
     # over the one generated via the LLIL
@@ -76,11 +76,11 @@ def explain_instruction(bv, addr):
             main_window.explain_window.description = [explanation for explanation in explanation_list]
         else:
             # Otherwise, just prepend the arch-specific explanation to the LLIL explanation
-            main_window.explain_window.description = [explanation for explanation in explanation_list] + [((str(llil.instr_index) + ': ' if (len(parse_il) > 1) else '') + explain_llil(bv, llil)) for llil in (parse_il)]
+            main_window.explain_window.description = [explanation for explanation in explanation_list] + [explain_llil(bv, llil) for llil in (parse_il)]
     else:
         # By default, we just use the LLIL explanation
         # We append the line number if we're displaying a conditional.
-        main_window.explain_window.description = [((str(llil.instr_index) + ': ' if (len(parse_il) > 1) else '') + explain_llil(bv, llil)) for llil in parse_il]
+        main_window.explain_window.description = [explain_llil(bv, llil) for llil in parse_il]
 
     # Display the MLIL and LLIL, dereferencing anything that looks like a hex number into a symbol if possible
     main_window.explain_window.llil = [dereference_symbols(bv, llil) for llil in llil_list]
