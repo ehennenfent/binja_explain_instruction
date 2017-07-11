@@ -1,5 +1,4 @@
 # IL Manifest
-----
 ## Usage of the Binary Ninja Intermediate Languages in the Explain Instruction Plugin
 Last updated 2017-July-11
 
