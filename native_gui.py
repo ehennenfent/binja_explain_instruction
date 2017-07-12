@@ -10,7 +10,7 @@ html_template = """
 <html>
 <body>
 <h3>Instruction:</h3>
-{window.instruction}
+<div style="font-family: monospace">{window.instruction}</div>
 <hr>
 <h3>Short Form:</h3>
 {window.short_form}
@@ -19,13 +19,13 @@ html_template = """
 {window.description}
 <hr>
 <h3>Equivalent LLIL:</h3>
-{window.llil}
+<div style="font-family: monospace">{window.llil}</div>
 <hr>
 <h3>Equivalent MLIL:</h3>
-{window.mlil}
+<div style="font-family: monospace">{window.mlil}</div>
 <hr>
 <h3>Instruction State:</h3>
-{window.state}
+<div style="font-family: monospace">{window.state}</div>
 </body>
 </html>
 """
@@ -78,7 +78,6 @@ class ExplanationWindow(object):
 
     @instruction.setter
     def instruction(self, instr):
-        print("Setting Instruction")
         if instr is not None:
             docs = self.get_doc_url(instr.split(' '))
             self._instruction = escape(instr.replace('    ', ' '))
@@ -93,7 +92,6 @@ class ExplanationWindow(object):
 
     @llil.setter
     def llil(self, llil_list):
-        print("Setting LLIL")
         newText = ""
         for llil in llil_list:
             if llil is not None:
