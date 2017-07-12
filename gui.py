@@ -19,7 +19,7 @@ def make_hline():
     return out
 
 def __None__(*args):
-    return "No documentation available", "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md"
+    return [("No documentation available", "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md")]
 
 class ExplanationWindow(QtWidgets.QWidget):
     """ Displays a brief explanation of what an instruction does """

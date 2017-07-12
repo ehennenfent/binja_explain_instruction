@@ -12,16 +12,17 @@ LowLevelILOperation.LLIL_CONST_PTR, LowLevelILOperation.LLIL_POP, LowLevelILOper
 with open(user_plugin_path + '/binja_explain_instruction/explanations_en.json', 'r') as explanation_file:
     explanations = json.load(explanation_file)
 
-def preprocess_LLIL_CALL(bv, llil_instruction):
-    """ Replaces addresses with function names when available """
-    func = bv.get_function_at(llil_instruction.dest.constant)
-    if func is not None:
-        llil_instruction.dest = func.name
-    return llil_instruction
-
 def preprocess_LLIL_CONST(_bv, llil_instruction):
     """ Replaces integer constants with hex tokens """
     llil_instruction.constant = llil_instruction.tokens[0]# hex(llil_instruction.constant).replace('L','')
+    return llil_instruction
+
+def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
+    """ Replaces integer constants with hex tokens """
+    for symbol in bv.get_symbols():
+        if symbol.address == llil_instruction.constant:
+            llil_instruction.constant = symbol.name
+            break
     return llil_instruction
 
 def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
@@ -77,11 +78,10 @@ def preprocess_LLIL_REG(_bv, llil_instruction):
 
 # Map LLIL operation names to function pointers
 preprocess_dict = {
-    "LLIL_CALL": preprocess_LLIL_CALL,
     "LLIL_IF": preprocess_LLIL_IF, # Conditional jumps
     "LLIL_GOTO": preprocess_LLIL_GOTO, # Unconditional jumps
     "LLIL_CONST": preprocess_LLIL_CONST,
-    "LLIL_CONST_PTR": preprocess_LLIL_CONST, # Seems to refer to a constant in .data - could consider dereferencing these
+    "LLIL_CONST_PTR": preprocess_LLIL_CONST_PTR, # Seems to refer to a constant in .data - could consider dereferencing these
     "LLIL_FLAG_COND": preprocess_LLIL_FLAG_COND,
     "LLIL_REG": preprocess_LLIL_REG, # Registers (including temporary)
     "LLIL_FLAG": preprocess_LLIL_FLAG, # Temporary flags
