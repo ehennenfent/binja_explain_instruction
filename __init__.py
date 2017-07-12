@@ -1,9 +1,9 @@
-from binaryninja import LowLevelILOperation, PluginCommand, log_error
+from binaryninja import LowLevelILOperation, PluginCommand, log_info
 
 try:
     from gui import explain_window
 except:
-    log_error("PyQt5 Gui unavailable; falling back to MessageBox hack")
+    log_info("PyQt5 Gui unavailable; falling back to MessageBox hack")
     from native_gui import explain_window
 from instruction_state import get_state
 from explain import explain_llil, fold_multi_il
