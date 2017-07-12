@@ -24,8 +24,10 @@ def init_plugin(bv):
             import x86, x86.explain
             explain_window().get_doc_url = x86.get_doc_url
             architecture_specific_explanation_function = x86.explain.arch_explain_instruction
-        elif 'your_architecture_here' in bv.arch.name: # Placeholder for additional architectures
-            pass
+        elif 'mips' in bv.arch.name:
+            import mips, mips.explain
+            explain_window().get_doc_url = mips.get_doc_url
+            architecture_specific_explanation_function = mips.explain.arch_explain_instruction
         arch = bv.arch.name
 
 def explain_instruction(bv, addr):
