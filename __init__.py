@@ -1,6 +1,10 @@
-from binaryninja import LowLevelILOperation, PluginCommand
+from binaryninja import LowLevelILOperation, PluginCommand, log_error
 
-from gui import explain_window
+try:
+    from gui import explain_window
+except:
+    log_error("PyQt5 Gui unavailable; falling back to MessageBox hack")
+    from native_gui import explain_window
 from instruction_state import get_state
 from explain import explain_llil, fold_multi_il
 from util import get_function_at, find_mlil, find_llil, find_lifted_il, inst_in_func, dereference_symbols

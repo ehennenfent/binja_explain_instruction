@@ -1,5 +1,6 @@
 from __future__ import print_function
 from binaryninja import show_message_box
+from cgi import escape
 
 mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
 The MLIL instruction shown may not correspond to this instruction
@@ -49,7 +50,6 @@ class ExplanationWindow(object):
 
     def show(self):
         rendered = html_template.format(window=window)
-        print(rendered)
         show_message_box('Explain Instruction', rendered)
 
     @property
@@ -81,15 +81,15 @@ class ExplanationWindow(object):
         print("Setting Instruction")
         if instr is not None:
             docs = self.get_doc_url(instr.split(' '))
-            self._instruction = instr.replace('    ', ' ')
-            self._shortForm = '<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=short_form) for short_form, url in docs)
+            self._instruction = escape(instr.replace('    ', ' '))
+            self._shortForm = '<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=escape(short_form)) for short_form, url in docs)
         else:
             self._instruction = 'None'
             self._shortForm = 'None'
 
     @description.setter
     def description(self, desc_list):
-        self._description = '<br>'.join(new_description for new_description in desc_list)
+        self._description = '<br>'.join(escape(new_description) for new_description in desc_list)
 
     @llil.setter
     def llil(self, llil_list):
@@ -99,12 +99,12 @@ class ExplanationWindow(object):
             if llil is not None:
                 tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
                 newText += "{}: ".format(llil.instr_index)
-                newText += ''.join(str(token) for token in tokens)
+                newText += ''.join(escape(str(token)) for token in tokens)
             else:
                 newText += 'None'
             newText += '<br>'
         if(len(llil_list) > 0):
-            self._LLIL = newText.strip()
+            self._LLIL = newText.strip('<br>')
         else:
             self._LLIL = 'None'
 
@@ -114,19 +114,19 @@ class ExplanationWindow(object):
         for mlil in mlil_list:
             if mlil is not None:
                 tokens = mlil.deref_tokens if hasattr(mlil, 'deref_tokens') else mlil.tokens
-                newText += (''.join(str(token) for token in tokens))
+                newText += (''.join(escape(str(token)) for token in tokens))
             else:
                 newText += ('None')
             newText += '<br>'
         if(len(mlil_list) > 0):
-            self._MLIL = newText.strip()
+            self._MLIL = newText.strip('<br>')
         else:
             self._MLIL = 'None'
 
     @state.setter
     def state(self, state_list):
         if state_list is not None:
-            self._stateDisplay = '<br>'.join(state_list)
+            self._stateDisplay = '<br>'.join(escape(state) for state in state_list)
         else:
             self._stateDisplay = 'None'
 
