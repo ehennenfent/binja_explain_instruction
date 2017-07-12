@@ -23,7 +23,6 @@ def init_plugin(bv):
         elif 'your_architecture_here' in bv.arch.name: # Placeholder for additional architectures
             pass
         arch = bv.arch.name
-    explain_window().show()
 
 def explain_instruction(bv, addr):
     """ Callback for the menu item that passes the information to the GUI """
@@ -68,5 +67,7 @@ def explain_instruction(bv, addr):
 
     # Display what information we can calculate about the program state before the instruction is executed
     explain_window().state = get_state(bv, addr)
+
+    explain_window().show()
 
 PluginCommand.register_for_address("Explain Instruction", "", explain_instruction)
