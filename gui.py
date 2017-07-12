@@ -34,9 +34,10 @@ def __None__(*args):
 
 window = None
 
-class ExplanationWindow:
+class ExplanationWindow(object):
     """ Displays a brief explanation of what an instruction does """
     def __init__(self):
+        super(ExplanationWindow, self).__init__()
         self._instruction = ""
         self._shortForm = ""
         self._description = ""
