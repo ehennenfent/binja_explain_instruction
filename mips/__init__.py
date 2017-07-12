@@ -492,7 +492,6 @@ def get_doc_url(i):
         if name in instrs.keys():
             inst_data = instrs[name][0]
             output.append((inst_data['short'], inst_data['link']))
-    # For 90% of instructions, output could just be a tuple and we could be done with it.
-    # However, the lock and rep* prefixes should be documented too (to prevent major "WTH" moments)
-    # so we have to structure everything around having a list of results
+    if len(output) == 0:
+        return [("No documentation for that instruction!", "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md")]
     return output
