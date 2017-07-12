@@ -1,12 +1,24 @@
 from __future__ import print_function
-
 import sys
 if (sys.platform == 'win32'):
     sys.path.append("C:\\Python27\\lib\\site-packages")
 
+from PyQt5.QtWidgets import QApplication, QMainWindow, qApp
+from PyQt5.QtCore import QCoreApplication
+
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontDatabase, QFont
+
+app = QApplication.instance()
+if app is None:
+    app = QCoreApplication.instance()
+if app is None:
+    app = qApp
+try:
+    main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
+except IndexError:
+    raise Exception("Could not attach to main window!")
 
 mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
 The MLIL instruction shown may not correspond to this instruction
@@ -178,3 +190,11 @@ class ExplanationWindow(QtWidgets.QWidget):
             self._stateDisplay.setPlainText('\n'.join(state_list))
         else:
             self.state_Display.setPlainText('None')
+
+def explain_window():
+    global main_window
+    # Creates a new window if it doesn't already exist
+    if not hasattr(main_window, 'explain_window'):
+        main_window.explain_window = ExplanationWindow()
+
+    return main_window.explain_window
