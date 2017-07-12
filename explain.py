@@ -1,5 +1,5 @@
 import json, traceback
-from binaryninja import LowLevelILOperation, LowLevelILInstruction, log_info, log_error, user_plugin_path
+from binaryninja import LowLevelILOperation, LowLevelILInstruction, log_info, log_error, user_plugin_path, ILFlag
 from util import *
 
 # Instruction attributes that can contain nested LLIL instructions (see preprocess)
@@ -32,7 +32,7 @@ def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
 def preprocess_LLIL_GOTO(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     func = get_function_at(bv, llil_instruction.address)
-    # We have to use the lifted IL since the LLIL ignores comparisons and tests 
+    # We have to use the lifted IL since the LLIL ignores comparisons and tests
     lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_GOTO , find_lifted_il(func, llil_instruction.address)))[0]
     lifted_il = func.lifted_il
     llil_instruction.dest = hex(lifted_il[lifted_instruction.dest].address).replace("L","")
@@ -41,21 +41,24 @@ def preprocess_LLIL_GOTO(bv, llil_instruction):
 def preprocess_LLIL_IF(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     func = get_function_at(bv, llil_instruction.address)
-    # We have to use the lifted IL since the LLIL ignores comparisons and tests 
+    # We have to use the lifted IL since the LLIL ignores comparisons and tests
     lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(func, llil_instruction.address)))[0]
     lifted_il = func.lifted_il
     llil_instruction.true = hex(lifted_il[lifted_instruction.true].address).replace("L","")
     llil_instruction.false = hex(lifted_il[lifted_instruction.false].address).replace("L","")
     return llil_instruction
 
-def preprocess_LLIL_FLAG(_bv, llil_instruction):
+def preprocess_LLIL_FLAG(bv, llil_instruction):
     """ Follow back temporary flags and append the address where they're created """
     if llil_instruction.src.temp:
         flag = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
         src = llil_instruction.function[indx]
         llil_instruction.src = src.src
-    llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
+        llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
+    elif type(llil_instruction.src) == ILFlag:
+        llil_instruction.src = bv.arch.flag_roles[llil_instruction.src.name].name.replace("Role","") + " is set"
+        llil_instruction.address = "unknown"
     return llil_instruction
 
 def preprocess_LLIL_REG(_bv, llil_instruction):
