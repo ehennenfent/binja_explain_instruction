@@ -2,7 +2,7 @@ def get_function_at(bv, addr):
     """ Gets the function that contains a given address, even if that address
     isn't the start of the function """
     blocks = bv.get_basic_blocks_at(addr)
-    return blocks[0].function if blocks is not None else None
+    return blocks[0].function if (blocks is not None and len(blocks) > 0) else None
 
 def find_mlil(func, addr):
     return find_in_IL(func.medium_level_il, addr)

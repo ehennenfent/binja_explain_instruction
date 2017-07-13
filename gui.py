@@ -212,9 +212,9 @@ class ExplanationWindow(QtWidgets.QWidget):
         counter = 0
         for f_read, f_written in tuple_list_list:
             if len(f_read) > 0:
-                out += ("({})".format(counter) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
+                out += ("({}) ".format(counter) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
             if len(f_written) > 0:
-                out += ("({})".format(counter) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
+                out += ("({}) ".format(counter) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
             out += '\n'
             counter += 1
         out = out.strip()

@@ -24,6 +24,9 @@ html_template = """
 <h3>Equivalent MLIL:</h3>
 <div style="font-family: monospace">{window.mlil}</div>
 <hr>
+<h3>Flag Operations:</h3>
+<div>{window.flags}</div>
+<hr>
 <h3>Instruction State:</h3>
 <div style="font-family: monospace">{window.state}</div>
 </body>
@@ -45,6 +48,7 @@ class ExplanationWindow(object):
         self._LLIL = ""
         self._MLIL = ""
         self._stateDisplay = ""
+        self._flags = ""
 
         self.get_doc_url = __None__
 
@@ -75,6 +79,10 @@ class ExplanationWindow(object):
     @property
     def state(self):
         return self._stateDisplay
+
+    @property
+    def flags(self):
+        return self._flags
 
     @instruction.setter
     def instruction(self, instr):
@@ -127,6 +135,21 @@ class ExplanationWindow(object):
             self._stateDisplay = '<br>'.join(escape(state) for state in state_list)
         else:
             self._stateDisplay = 'None'
+
+    @flags.setter
+    def flags(self, tuple_list_list):
+        out = ""
+        counter = 0
+        for f_read, f_written in tuple_list_list:
+            if len(f_read) > 0:
+                out += ("({}) ".format(counter) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
+            if len(f_written) > 0:
+                out += ("({}) ".format(counter) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
+            out += '\n'
+            counter += 1
+        out = out.strip()
+        out = "None" if out == "" else out
+        self._flags = (out)
 
 
 def explain_window():
