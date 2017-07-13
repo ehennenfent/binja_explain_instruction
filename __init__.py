@@ -32,6 +32,14 @@ def init_plugin(bv):
             import aarch64, aarch64.explain
             explain_window().get_doc_url = aarch64.get_doc_url
             architecture_specific_explanation_function = aarch64.explain.arch_explain_instruction
+        elif 'arm' in bv.arch.name or 'thumb' in bv.arch.name: # Note: completely untested on thumb2. I couldn't find a test binary.
+            import ual, ual.explain
+            explain_window().get_doc_url = ual.get_doc_url
+            architecture_specific_explanation_function = ual.explain.arch_explain_instruction
+        elif '6502' in bv.arch.name:
+            import asm6502, asm6502.explain
+            explain_window().get_doc_url = asm6502.get_doc_url
+            architecture_specific_explanation_function = asm6502.explain.arch_explain_instruction
         arch = bv.arch.name
 
 def explain_instruction(bv, addr):
