@@ -20,6 +20,8 @@ try:
 except IndexError:
     raise Exception("Could not attach to main window!")
 
+from util import *
+
 mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
 The MLIL instruction shown may not correspond to this instruction
 alone, or this instruction may not have a direct MLIL equivalent."""
@@ -156,70 +158,32 @@ class ExplanationWindow(QtWidgets.QWidget):
 
     @instruction.setter
     def instruction(self, instr):
-        if instr is not None:
-            docs = self.get_doc_url(instr.split(' '))
-            self._instruction.setText(instr.replace('    ', ' '))
-            self._shortForm.setText('<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=short_form) for short_form, url in docs))
-        else:
-            self._instruction.setText('None')
-            self._shortForm.setText('None')
+        i, s = parse_instruction(self, instr)
+        self._instruction.setText(i)
+        self._shortForm.setText(s)
 
     @description.setter
     def description(self, desc_list):
-        self._description.setText('\n'.join(new_description for new_description in desc_list))
+        self._description.setText(parse_description(self, desc_list))
 
     @llil.setter
     def llil(self, llil_list):
-        newText = ""
-        for llil in llil_list:
-            if llil is not None:
-                tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
-                newText += "{}: ".format(llil.instr_index)
-                newText += ''.join(str(token) for token in tokens)
-            else:
-                newText += 'None'
-            newText += '\n'
-        if(len(llil_list) > 0):
-            self._LLIL.setText(newText.strip())
-        else:
-            self._LLIL.setText('None')
+        self._LLIL.setText(parse_llil(self, llil_list))
 
     @mlil.setter
     def mlil(self, mlil_list):
-        newText = ""
-        for mlil in mlil_list:
-            if mlil is not None:
-                tokens = mlil.deref_tokens if hasattr(mlil, 'deref_tokens') else mlil.tokens
-                newText += (''.join(str(token) for token in tokens))
-            else:
-                newText += ('None')
-            newText += '\n'
-        if(len(mlil_list) > 0):
-            self._MLIL.setText(newText.strip())
-        else:
-            self._MLIL.setText('None')
+        self._MLIL.setText(parse_mlil(self, mlil_list))
 
     @state.setter
     def state(self, state_list):
-        if state_list is not None:
-            self._stateDisplay.setPlainText('\n'.join(state_list))
-        else:
-            self._stateDisplay.setPlainText('None')
+        self._stateDisplay.setPlainText(parse_state(self, state_list))
 
     @flags.setter
     def flags(self, tuple_list_list):
-        out = ""
-        counter = 0
-        for f_read, f_written in tuple_list_list:
-            if len(f_read) > 0:
-                out += ("({}) ".format(counter) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
-            if len(f_written) > 0:
-                out += ("({}) ".format(counter) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
-            out += '\n'
-            counter += 1
-        out = out.strip()
-        out = "None" if out == "" else out
-        self._flags.setText(out)
+        self._flags.setText(parse_flags(self, tuple_list_list))
+
+    def escape(self, in_str):
+        return in_str
 
 def explain_window():
     global main_window

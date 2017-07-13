@@ -87,7 +87,7 @@ def explain_instruction(bv, addr):
     explain_window().llil = [dereference_symbols(bv, llil) for llil in llil_list]
     explain_window().mlil = [dereference_symbols(bv, mlil) for mlil in mlil_list]
 
-    explain_window().flags = [(func.get_flags_read_by_lifted_il_instruction(lifted.instr_index), func.get_flags_written_by_lifted_il_instruction(lifted.instr_index)) for lifted in lifted_il_list]
+    explain_window().flags = [(func.get_flags_read_by_lifted_il_instruction(lifted.instr_index), func.get_flags_written_by_lifted_il_instruction(lifted.instr_index), lifted) for lifted in lifted_il_list]
 
     # Display what information we can calculate about the program state before the instruction is executed
     try:

@@ -44,3 +44,70 @@ def dereference_symbols(bv, il_instruction):
             out.append(item)
         il_instruction.deref_tokens = out
     return il_instruction
+
+def parse_instruction(context, instr):
+    if instr is not None:
+        docs = context.get_doc_url(instr.split(' '))
+        instruction = context.escape(instr.replace('    ', ' '))
+        shortForm = '<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=context.escape(short_form)) for short_form, url in docs)
+        return instruction, shortForm
+    else:
+        return 'None', 'None'
+
+def parse_description(context, desc_list):
+    return '<br>'.join(context.escape(new_description) for new_description in desc_list)
+
+def parse_llil(context, llil_list):
+    newText = ""
+    for llil in llil_list:
+        if llil is not None:
+            tokens = llil.deref_tokens if hasattr(llil, 'deref_tokens') else llil.tokens
+            newText += "{}: ".format(llil.instr_index)
+            newText += ''.join(context.escape(str(token)) for token in tokens)
+        else:
+            newText += 'None'
+        newText += '<br>'
+    if(len(llil_list) > 0):
+        return newText.strip('<br>')
+    else:
+        return 'None'
+
+def parse_mlil(context, mlil_list):
+    newText = ""
+    for mlil in mlil_list:
+        if mlil is not None:
+            tokens = mlil.deref_tokens if hasattr(mlil, 'deref_tokens') else mlil.tokens
+            newText += "{}: ".format(mlil.instr_index)
+            newText += (''.join(context.escape(str(token)) for token in tokens))
+        else:
+            newText += ('None')
+        newText += '<br>'
+    if(len(mlil_list) > 0):
+        return newText.strip('<br>')
+    else:
+        return 'None'
+
+def parse_state(context, state_list):
+    if state_list is not None:
+        return '<br>'.join(context.escape(state) for state in state_list)
+    else:
+        return 'None'
+
+def rec_replace(in_str, old, new):
+    if old == new:
+        return in_str
+    if old not in in_str:
+        return in_str
+    return rec_replace(in_str.replace(old, new), old, new)
+
+def parse_flags(context, tuple_list_list):
+    out = ""
+    for f_read, f_written, lifted in tuple_list_list:
+        if len(f_read) > 0:
+            out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
+        if len(f_written) > 0:
+            out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
+        out += '\n'
+    out = rec_replace(out.strip(), '\n\n', '\n')
+    out = "None" if out == "" else out
+    return out
