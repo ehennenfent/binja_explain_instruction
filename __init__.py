@@ -28,6 +28,10 @@ def init_plugin(bv):
             import mips, mips.explain
             explain_window().get_doc_url = mips.get_doc_url
             architecture_specific_explanation_function = mips.explain.arch_explain_instruction
+        elif 'aarch64' in bv.arch.name:
+            import aarch64, aarch64.explain
+            explain_window().get_doc_url = aarch64.get_doc_url
+            architecture_specific_explanation_function = aarch64.explain.arch_explain_instruction
         arch = bv.arch.name
 
 def explain_instruction(bv, addr):
