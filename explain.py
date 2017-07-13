@@ -19,10 +19,14 @@ def preprocess_LLIL_CONST(_bv, llil_instruction):
 
 def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
     """ Replaces integer constants with hex tokens """
+    found_symbol = False
     for symbol in bv.get_symbols():
         if symbol.address == llil_instruction.constant:
             llil_instruction.constant = symbol.name
+            found_symbol = True
             break
+    if not found_symbol:
+        llil_instruction.constant = hex(llil_instruction.constant).replace("L","")
     return llil_instruction
 
 def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):

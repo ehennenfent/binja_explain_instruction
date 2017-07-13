@@ -1,4 +1,4 @@
-from binaryninja import LowLevelILOperation, PluginCommand, log_info
+from binaryninja import LowLevelILOperation, PluginCommand, log_info, log_error
 
 try:
     from gui import explain_window
@@ -40,6 +40,10 @@ def init_plugin(bv):
             import asm6502, asm6502.explain
             explain_window().get_doc_url = asm6502.get_doc_url
             architecture_specific_explanation_function = asm6502.explain.arch_explain_instruction
+        elif 'msp430' in bv.arch.name:
+            import msp430, msp430.explain
+            explain_window().get_doc_url = msp430.get_doc_url
+            architecture_specific_explanation_function = msp430.explain.arch_explain_instruction
         arch = bv.arch.name
 
 def explain_instruction(bv, addr):
@@ -84,7 +88,10 @@ def explain_instruction(bv, addr):
     explain_window().mlil = [dereference_symbols(bv, mlil) for mlil in mlil_list]
 
     # Display what information we can calculate about the program state before the instruction is executed
-    explain_window().state = get_state(bv, addr)
+    try:
+        explain_window().state = get_state(bv, addr)
+    except AttributeError:
+        log_error("No instruction state support for this architecture")
 
     explain_window().show()
 

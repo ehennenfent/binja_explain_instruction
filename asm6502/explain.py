@@ -3,8 +3,9 @@ from binaryninja import user_plugin_path, log_error
 from ..explain import explain_llil
 from ..util import *
 from . import find_proper_name
+import os
 
-with open(user_plugin_path + '/binja_explain_instruction/x86/explanations_en.json', 'r') as explanation_file:
+with open(os.path.dirname(os.path.realpath(__file__)) + '/explanations_en.json', 'r') as explanation_file:
     explanations = json.load(explanation_file)
 
 # List of instructions for which we'll just prepend the parsed LLIL explanation rather than
