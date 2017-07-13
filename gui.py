@@ -105,6 +105,17 @@ class ExplanationWindow(QtWidgets.QWidget):
 
         self._layout.addWidget(make_hline())
 
+        self._labelG = QtWidgets.QLabel()
+        self._labelG.setText("Flag Operations:")
+        self._labelG.setFont(self._labelFont)
+        self._layout.addWidget(self._labelG)
+
+        self._flags = QtWidgets.QLabel()
+        self._flags.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._layout.addWidget(self._flags)
+
+        self._layout.addWidget(make_hline())
+
         self._labelE = QtWidgets.QLabel()
         self._labelE.setText("Instruction State:")
         self._labelE.setFont(self._labelFont)
@@ -138,6 +149,10 @@ class ExplanationWindow(QtWidgets.QWidget):
     @property
     def state(self):
         return self._stateDisplay.toPlainText()
+
+    @property
+    def flags(self):
+        return self._flags.text()
 
     @instruction.setter
     def instruction(self, instr):
@@ -190,6 +205,21 @@ class ExplanationWindow(QtWidgets.QWidget):
             self._stateDisplay.setPlainText('\n'.join(state_list))
         else:
             self._stateDisplay.setPlainText('None')
+
+    @flags.setter
+    def flags(self, tuple_list_list):
+        out = ""
+        counter = 0
+        for f_read, f_written in tuple_list_list:
+            if len(f_read) > 0:
+                out += ("({})".format(counter) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
+            if len(f_written) > 0:
+                out += ("({})".format(counter) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
+            out += '\n'
+            counter += 1
+        out = out.strip()
+        out = "None" if out == "" else out
+        self._flags.setText(out)
 
 def explain_window():
     global main_window
