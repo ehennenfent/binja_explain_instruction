@@ -61,8 +61,8 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
         flag = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
         src = llil_instruction.function[indx]
-        if src.address != llil_instruction.address:
-            # Make sure that we're actually looking at a different instrucion (and not a Phi function)
+        if hasattr(src, 'src'):
+            # Make sure that we're actually looking at a instruction that sets something (and not a Phi function)
             llil_instruction.src = src.src
             llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
         elif type(llil_instruction.src == ILFlag):
