@@ -10,6 +10,8 @@ no_paren = [LowLevelILOperation.LLIL_CONST, LowLevelILOperation.LLIL_REG,
 LowLevelILOperation.LLIL_CONST_PTR, LowLevelILOperation.LLIL_POP, LowLevelILOperation.LLIL_FLAG]
 
 with open(user_plugin_path + '/binja_explain_instruction/explanations_en.json', 'r') as explanation_file:
+    # This used to break plugins when installing from a repo, since user_plugin_path didn't get updated.
+    # I think it's been fixed?
     explanations = json.load(explanation_file)
 
 def preprocess_LLIL_CONST(_bv, llil_instruction):
@@ -18,7 +20,7 @@ def preprocess_LLIL_CONST(_bv, llil_instruction):
     return llil_instruction
 
 def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
-    """ Replaces integer constants with hex tokens """
+    """ Replaces integer constants with symbols (if available) and hex tokens otherwise """
     found_symbol = False
     for symbol in bv.get_symbols():
         if symbol.address == llil_instruction.constant:
@@ -60,13 +62,19 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
         src = llil_instruction.function[indx]
         if src.address != llil_instruction.address:
+            # Make sure that we're actually looking at a different instrucion (and not a Phi function)
             llil_instruction.src = src.src
             llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
         elif type(llil_instruction.src == ILFlag):
+            # Sometimes we have a temporary flag that resolves to a Phi function, which makes it show up at the same address.
+            # Rather than try to build a conditional tree from the phi function (potentially impossible?) we default back to
+            # the CPU flags.
             lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(llil_instruction.function.source_function, llil_instruction.address)))[0]
             llil_instruction.src = lifted_instruction.condition
             llil_instruction.address = "in multiple code paths"
     elif type(llil_instruction.src) == ILFlag:
+        # On occasion, binja won't know what to do with a CPU flag and will use it "raw" without figuring
+        # out what the conditonal means. Happens with the direction flag on x86 sometimes.
         llil_instruction.src = bv.arch.flag_roles[llil_instruction.src.name].name.replace("Role","") + " is set"
         llil_instruction.address = "unknown"
     return llil_instruction

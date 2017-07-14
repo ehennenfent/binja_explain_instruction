@@ -3,10 +3,9 @@ from binaryninja import show_message_box
 from util import *
 import cgi
 
-mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
-The MLIL instruction shown may not correspond to this instruction
-alone, or this instruction may not have a direct MLIL equivalent."""
-
+# We could switch this to a mako template to get a bit more power - strictly speaking, we could
+# switch *everything* (even the explantions) to a mako template - but that's an additional
+# dependency for not very much value added.
 html_template = """
 <html>
 <body>

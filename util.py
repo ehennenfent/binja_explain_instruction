@@ -46,6 +46,7 @@ def dereference_symbols(bv, il_instruction):
     return il_instruction
 
 def parse_instruction(context, instr):
+    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
     if instr is not None:
         docs = context.get_doc_url(instr.split(' '))
         instruction = context.escape(instr.replace('    ', ' '))
@@ -58,6 +59,7 @@ def parse_description(context, desc_list):
     return context.newline.join(context.escape(new_description) for new_description in desc_list)
 
 def parse_llil(context, llil_list):
+    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
     newText = ""
     for llil in llil_list:
         if llil is not None:
@@ -73,6 +75,7 @@ def parse_llil(context, llil_list):
         return 'None'
 
 def parse_mlil(context, mlil_list):
+    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
     newText = ""
     for mlil in mlil_list:
         if mlil is not None:
@@ -94,6 +97,7 @@ def parse_state(context, state_list):
         return 'None'
 
 def rec_replace(in_str, old, new):
+    """ Recursively replace a string in a string """
     if old == new:
         return in_str
     if old not in in_str:
@@ -101,6 +105,7 @@ def rec_replace(in_str, old, new):
     return rec_replace(in_str.replace(old, new), old, new)
 
 def parse_flags(context, tuple_list_list):
+    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
     out = ""
     for f_read, f_written, lifted in tuple_list_list:
         if len(f_read) > 0:
