@@ -62,7 +62,7 @@
   "LLIL_BP": "Processor Breakpoint",
   "LLIL_FLAG_COND": "the last comparison was {llil.condition}",
   "LLIL_BOOL_TO_INT": "<NOT IMPLEMENTED> Converts boolean value in {llil.src} to an integer",
-  "LLIL_JUMP_TO": "<NOT IMPLEMENTED> Jumps to {llil.dest}",
+  "LLIL_JUMP_TO": "Jump Table: Jumps to the instruction at the address given by {llil.dest}",
   "LLIL_FLAG": "{llil.src} (at instruction {llil.address})",
   "LLIL_SET_FLAG": "set temporary flag {llil.dest} to {llil.src}",
   "LLIL_FLAG_BIT": "bit {llil.bit} of flag {llil.src}",

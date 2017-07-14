@@ -9,9 +9,12 @@ expr_attrs = ['src', 'dest', 'hi', 'lo', 'left', 'right', 'condition']
 no_paren = [LowLevelILOperation.LLIL_CONST, LowLevelILOperation.LLIL_REG,
 LowLevelILOperation.LLIL_CONST_PTR, LowLevelILOperation.LLIL_POP, LowLevelILOperation.LLIL_FLAG]
 
-with open(user_plugin_path + '/binja_explain_instruction/explanations_en.json', 'r') as explanation_file:
-    # This used to break plugins when installing from a repo, since user_plugin_path didn't get updated.
-    # I think it's been fixed?
+# Using user_plugin_path doesn't work with plugins that have been installed from the repository manager,
+# since it points to .binaryninja/plugins instead of .binaryninja/repositories
+# path = user_plugin_path + '/binja_explain_instruction/explanations_en.json'
+import os
+path = os.path.dirname(os.path.realpath(__file__)) + '/explanations_en.json'
+with open(path, 'r') as explanation_file:
     explanations = json.load(explanation_file)
 
 def preprocess_LLIL_CONST(_bv, llil_instruction):
