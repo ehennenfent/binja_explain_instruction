@@ -88,10 +88,15 @@ def preprocess_LLIL_REG(_bv, llil_instruction):
         reg = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_reg_definition(reg)
         src = llil_instruction.function[indx]
-        llil_instruction.src = src.src
-        # Add a location flag so it's clear where in the program execution we actually got the source values from,
-        # in case they've changed since then
-        llil_instruction.loc = " (at instruction {})".format(hex(src.address).replace("L",""))
+        if hasattr(src, 'src'):
+            # I've never seen it in the wild, but it's probably possible for a temporary variable to be sourced
+            # from a Phi function on the same instruction, which could lead to infinite recursion
+            llil_instruction.src = src.src
+            # Add a location flag so it's clear where in the program execution we actually got the source values from,
+            # in case they've changed since then
+            llil_instruction.loc = " (at instruction {})".format(hex(src.address).replace("L",""))
+        else:
+            llil_instruction.loc = " (value dependent on code path used to reach this instruction)"
     else:
         llil_instruction.loc = ""
     return llil_instruction
