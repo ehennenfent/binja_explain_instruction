@@ -49,13 +49,13 @@ def parse_instruction(context, instr):
     if instr is not None:
         docs = context.get_doc_url(instr.split(' '))
         instruction = context.escape(instr.replace('    ', ' '))
-        shortForm = '<br>'.join("<a href=\"{href}\">{form}</a>".format(href=url, form=context.escape(short_form)) for short_form, url in docs)
+        shortForm = context.newline.join("<a href=\"{href}\">{form}</a>".format(href=url, form=context.escape(short_form)) for short_form, url in docs)
         return instruction, shortForm
     else:
         return 'None', 'None'
 
 def parse_description(context, desc_list):
-    return '<br>'.join(context.escape(new_description) for new_description in desc_list)
+    return context.newline.join(context.escape(new_description) for new_description in desc_list)
 
 def parse_llil(context, llil_list):
     newText = ""
@@ -66,9 +66,9 @@ def parse_llil(context, llil_list):
             newText += ''.join(context.escape(str(token)) for token in tokens)
         else:
             newText += 'None'
-        newText += '<br>'
+        newText += context.newline
     if(len(llil_list) > 0):
-        return newText.strip('<br>')
+        return newText.strip(context.newline)
     else:
         return 'None'
 
@@ -81,15 +81,15 @@ def parse_mlil(context, mlil_list):
             newText += (''.join(context.escape(str(token)) for token in tokens))
         else:
             newText += ('None')
-        newText += '<br>'
+        newText += context.newline
     if(len(mlil_list) > 0):
-        return newText.strip('<br>')
+        return newText.strip(context.newline)
     else:
         return 'None'
 
 def parse_state(context, state_list):
     if state_list is not None:
-        return '<br>'.join(context.escape(state) for state in state_list)
+        return context.newline.join(context.escape(state) for state in state_list)
     else:
         return 'None'
 
@@ -104,10 +104,10 @@ def parse_flags(context, tuple_list_list):
     out = ""
     for f_read, f_written, lifted in tuple_list_list:
         if len(f_read) > 0:
-            out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + '\n'
+            out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Reads: " + ', '.join(f_read) + context.newline
         if len(f_written) > 0:
-            out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + '\n'
-        out += '\n'
-    out = rec_replace(out.strip(), '\n\n', '\n')
+            out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + context.newline
+        out += context.newline
+    out = rec_replace(out.strip(), context.newline*2, context.newline)
     out = "None" if out == "" else out
     return out

@@ -51,6 +51,7 @@ class ExplanationWindow(object):
         self._stateDisplay = ""
         self._flags = ""
 
+        self.newline = '<br>'
         self.get_doc_url = __None__
 
     def show(self):

@@ -43,6 +43,8 @@ class ExplanationWindow(QtWidgets.QWidget):
         self.setLayout(QtWidgets.QVBoxLayout())
         self._layout = self.layout()
 
+        self.newline = '\n'
+
         self._labelFont = QFont()
         self._labelFont.setPointSize(12)
 
