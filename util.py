@@ -108,6 +108,6 @@ def parse_flags(context, tuple_list_list):
         if len(f_written) > 0:
             out += ("(Lifted IL: {}) ".format(lifted.instr_index) if len(tuple_list_list) > 1 else "") + "Writes: " + ', '.join(f_written) + context.newline
         out += context.newline
-    out = rec_replace(out.strip(), context.newline*2, context.newline)
-    out = "None" if out == "" else out
+    out = rec_replace(out.strip(context.newline), context.newline*2, context.newline)
+    out = "None" if len(out) == 0 else out
     return out

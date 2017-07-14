@@ -60,7 +60,7 @@
   "LLIL_CONST_PTR": "{llil.constant}",
   "LLIL_TRAP": "Halts the CPU until the next interrupt is fired.",
   "LLIL_BP": "Processor Breakpoint",
-  "LLIL_FLAG_COND": "flags indicate last comparison was {llil.condition}",
+  "LLIL_FLAG_COND": "last comparison was {llil.condition}",
   "LLIL_BOOL_TO_INT": "<NOT IMPLEMENTED> Converts boolean value in {llil.src} to an integer",
   "LLIL_JUMP_TO": "<NOT IMPLEMENTED> Jumps to {llil.dest}",
   "LLIL_FLAG": "{llil.src} (at instruction {llil.address})",

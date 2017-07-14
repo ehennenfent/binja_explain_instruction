@@ -59,8 +59,13 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
         flag = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
         src = llil_instruction.function[indx]
-        llil_instruction.src = src.src
-        llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
+        if src.address != llil_instruction.address:
+            llil_instruction.src = src.src
+            llil_instruction.address = hex(llil_instruction.src.address).replace("L","")
+        elif type(llil_instruction.src == ILFlag):
+            lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(llil_instruction.function.source_function, llil_instruction.address)))[0]
+            llil_instruction.src = lifted_instruction.condition
+            llil_instruction.address = "in multiple code paths"
     elif type(llil_instruction.src) == ILFlag:
         llil_instruction.src = bv.arch.flag_roles[llil_instruction.src.name].name.replace("Role","") + " is set"
         llil_instruction.address = "unknown"
