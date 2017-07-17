@@ -44,6 +44,11 @@ def init_plugin(bv):
             import msp430, msp430.explain
             explain_window().get_doc_url = msp430.get_doc_url
             architecture_specific_explanation_function = msp430.explain.arch_explain_instruction
+        elif 'powerpc' in bv.arch.name:
+            # PowerPC support will likely be added in Binja v1.1; may need to change the arch name
+            import powerpc, powerpc.explain
+            explain_window().get_doc_url = powerpc.get_doc_url
+            architecture_specific_explanation_function = powerpc.explain.arch_explain_instruction
         arch = bv.arch.name
 
 def explain_instruction(bv, addr):
