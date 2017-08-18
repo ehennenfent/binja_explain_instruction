@@ -5,6 +5,9 @@ This plugin adds a popup window to Binary Ninja that explains in simple English 
 
 ### Read the Limitations section in detail before using this plugin, or you may find it confuses you more than it helps you.
 
+## Origins
+This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program. **Further updates will be tracked at [https://github.com/ehennenfent/binja_explain_instruction](https://github.com/ehennenfent/binja_explain_instruction).** NCC Group is not responsible for any further changes made to the repository after August 18th, 2017. 
+
 ## Assumed Knowledge Level
 The descriptions are intended to be simple enough for a novice to understand. However, there is some previous knowledge assumed, notably that the reader understands the concepts of a register, an instruction, the stack, CPU flags, etc. Consider taking a look at [Beginners.re](https://beginners.re/) if you need help with the background.
 
@@ -51,9 +54,6 @@ This plugin has only been tested on 64-bit Ubuntu 16.04. However, since it does 
 If available, this plugin uses PyQt5 to display the explanation window. If no working PyQt5 installation is found, it will fall back to using the `show_message_box` feature of the Binary Ninja API, which displays a window that behaves more or less the same, but is not resizable, and blocks any other interaction with Binary Ninja.
 1. [Optional]: Install PyQt5 for your platform (`apt install python-pyqt5` on Ubuntu. For other platforms, see [this guide](https://github.com/nbsdx/binja-ui-api/blob/master/HowToPyQt5.pdf).)
 2. Clone this repository into your [Binary Ninja Plugins Folder](https://github.com/Vector35/binaryninja-api/tree/dev/python/examples#loading-plugins)
-
-## Origins
-This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program.
 
 ## Contributing
 This plugin is designed to make it simple to add support for new LLIL instructions or additional architectures. See [CONTRIBUTING.md](https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md). If you come across any inaccuracies, feel free to file a pull request or create an issue.
