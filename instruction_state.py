@@ -20,20 +20,27 @@
 
 from binaryninja import MediumLevelILOperation, RegisterValueType
 
+
 def IsRegisterValueInteresting(reg):
-    return reg.type == RegisterValueType.ConstantValue or \
-            reg.type == RegisterValueType.StackFrameOffset or \
-            reg.type == RegisterValueType.ReturnAddressValue
+    return (
+        reg.type == RegisterValueType.ConstantValue
+        or reg.type == RegisterValueType.StackFrameOffset
+        or reg.type == RegisterValueType.ReturnAddressValue
+    )
+
 
 def FindMLILCallForAddress(func, addr):
     mlil = func.medium_level_il.ssa_form
     for block in mlil:
         for m in block:
-            if m.address == addr and \
-                    m.operation == MediumLevelILOperation.MLIL_CALL_SSA:
+            if (
+                m.address == addr
+                and m.operation == MediumLevelILOperation.MLIL_CALL_SSA
+            ):
                 return m
 
     return None
+
 
 def get_state(bv, addr):
     blocks = bv.get_basic_blocks_at(addr)

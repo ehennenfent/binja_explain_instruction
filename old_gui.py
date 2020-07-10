@@ -1,4 +1,3 @@
-
 from binaryninja import show_message_box
 from .util import *
 import html
@@ -33,13 +32,22 @@ html_template = """
 </html>
 """
 
+
 def __None__(*args):
-    return [("No documentation available", "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md")]
+    return [
+        (
+            "No documentation available",
+            "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md",
+        )
+    ]
+
 
 window = None
 
+
 class ExplanationWindow(object):
     """ Displays a brief explanation of what an instruction does """
+
     def __init__(self):
         super(ExplanationWindow, self).__init__()
         self._instruction = ""
@@ -50,12 +58,12 @@ class ExplanationWindow(object):
         self._stateDisplay = ""
         self._flags = ""
 
-        self.newline = '<br>'
+        self.newline = "<br>"
         self.get_doc_url = __None__
 
     def show(self):
         rendered = html_template.format(window=window)
-        show_message_box('Explain Instruction', rendered)
+        show_message_box("Explain Instruction", rendered)
 
     @property
     def instruction(self):
@@ -113,6 +121,7 @@ class ExplanationWindow(object):
 
     def escape(self, in_str):
         return html.escape(in_str)
+
 
 def explain_window():
     global window
