@@ -138,8 +138,8 @@ def explain_instruction(bv, addr):
     # Display what information we can calculate about the program state before the instruction is executed
     try:
         explain_window().state = get_state(bv, addr)
-    except AttributeError:
-        log_error("No instruction state support for this architecture")
+    except (AttributeError, TypeError) as e:
+        log_error("Failed to extract instruction state")
 
     explain_window().show()
 
