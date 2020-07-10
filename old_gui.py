@@ -1,196 +1,122 @@
 
-import sys
-if (sys.platform == 'win32'):
-    sys.path.append("C:\\Python27\\lib\\site-packages")
-
-from PyQt5.QtWidgets import QApplication, QMainWindow, qApp
-from PyQt5.QtCore import QCoreApplication
-
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFontDatabase, QFont
-
-app = QApplication.instance()
-if app is None:
-    app = QCoreApplication.instance()
-if app is None:
-    app = qApp
-try:
-    main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
-except IndexError:
-    raise Exception("Could not attach to main window!")
-
+from binaryninja import show_message_box
 from .util import *
+import html
 
-mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
-The MLIL instruction shown may not correspond to this instruction
-alone, or this instruction may not have a direct MLIL equivalent."""
-
-def make_hline():
-    out = QtWidgets.QFrame()
-    out.setFrameShape(QtWidgets.QFrame.HLine)
-    out.setFrameShadow(QtWidgets.QFrame.Sunken)
-    return out
+# We could switch this to a mako template to get a bit more power - strictly speaking, we could
+# switch *everything* (even the explantions) to a mako template - but that's an additional
+# dependency for not very much value added.
+html_template = """
+<html>
+<body>
+<h3>Instruction:</h3>
+<div style="font-family: monospace">{window.instruction}</div>
+<hr>
+<h3>Short Form:</h3>
+{window.short_form}
+<hr>
+<h3>Description:</h3>
+{window.description}
+<hr>
+<h3>Equivalent LLIL:</h3>
+<div style="font-family: monospace">{window.llil}</div>
+<hr>
+<h3>Equivalent MLIL:</h3>
+<div style="font-family: monospace">{window.mlil}</div>
+<hr>
+<h3>Flag Operations:</h3>
+<div>{window.flags}</div>
+<hr>
+<h3>Instruction State:</h3>
+<div style="font-family: monospace">{window.state}</div>
+</body>
+</html>
+"""
 
 def __None__(*args):
     return [("No documentation available", "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md")]
 
-class ExplanationWindow(QtWidgets.QWidget):
+window = None
+
+class ExplanationWindow(object):
     """ Displays a brief explanation of what an instruction does """
     def __init__(self):
         super(ExplanationWindow, self).__init__()
-        self.setWindowTitle("Explain Instruction")
-        self.setLayout(QtWidgets.QVBoxLayout())
-        self._layout = self.layout()
+        self._instruction = ""
+        self._shortForm = ""
+        self._description = ""
+        self._LLIL = ""
+        self._MLIL = ""
+        self._stateDisplay = ""
+        self._flags = ""
 
-        self.newline = '\n'
-
-        self._labelFont = QFont()
-        self._labelFont.setPointSize(12)
-
-        self._labelA = QtWidgets.QLabel()
-        self._labelA.setText("Instruction:")
-        self._labelA.setFont(self._labelFont)
-        self._layout.addWidget(self._labelA)
-
-        self._instruction = QtWidgets.QLabel()
-        self._instruction.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._instruction.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._instruction)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelF = QtWidgets.QLabel()
-        self._labelF.setText("Short Form:")
-        self._labelF.setFont(self._labelFont)
-        self._layout.addWidget(self._labelF)
-
-        self._shortForm = QtWidgets.QLabel()
-        self._shortForm.setTextFormat(Qt.RichText)
-        self._shortForm.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        self._shortForm.setOpenExternalLinks(True)
-        self._layout.addWidget(self._shortForm)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelB = QtWidgets.QLabel()
-        self._labelB.setText("Description:")
-        self._labelB.setFont(self._labelFont)
-        self._layout.addWidget(self._labelB)
-
-        self._description = QtWidgets.QLabel()
-        self._description.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._description)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelC = QtWidgets.QLabel()
-        self._labelC.setText("Equivalent LLIL:")
-        self._labelC.setFont(self._labelFont)
-        self._layout.addWidget(self._labelC)
-
-        self._LLIL = QtWidgets.QLabel()
-        self._LLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._LLIL)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelD = QtWidgets.QLabel()
-        self._labelD.setText("Equivalent* MLIL:")
-        self._labelD.setToolTip(mlil_tooltip)
-        self._labelD.setFont(self._labelFont)
-        self._layout.addWidget(self._labelD)
-
-        self._MLIL = QtWidgets.QLabel()
-        self._MLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._MLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._MLIL)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelG = QtWidgets.QLabel()
-        self._labelG.setText("Flag Operations:")
-        self._labelG.setFont(self._labelFont)
-        self._layout.addWidget(self._labelG)
-
-        self._flags = QtWidgets.QLabel()
-        self._flags.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._flags)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelE = QtWidgets.QLabel()
-        self._labelE.setText("Instruction State:")
-        self._labelE.setFont(self._labelFont)
-        self._layout.addWidget(self._labelE)
-
-        self._stateDisplay = QtWidgets.QTextBrowser()
-        self._stateDisplay.setOpenLinks(False)
-        self._stateDisplay.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._layout.addWidget(self._stateDisplay)
-
-        self.setObjectName('Explain_Window')
-
+        self.newline = '<br>'
         self.get_doc_url = __None__
+
+    def show(self):
+        rendered = html_template.format(window=window)
+        show_message_box('Explain Instruction', rendered)
 
     @property
     def instruction(self):
-        return self._instruction.text()
+        return self._instruction
 
     @property
     def description(self):
-        return self._description.text()
+        return self._description
+
+    @property
+    def short_form(self):
+        return self._shortForm
 
     @property
     def llil(self):
-        return self._LLIL.text()
+        return self._LLIL
 
     @property
     def mlil(self):
-        return self._MLIL.text()
+        return self._MLIL
 
     @property
     def state(self):
-        return self._stateDisplay.toPlainText()
+        return self._stateDisplay
 
     @property
     def flags(self):
-        return self._flags.text()
+        return self._flags
 
     @instruction.setter
     def instruction(self, instr):
         i, s = parse_instruction(self, instr)
-        self._instruction.setText(i)
-        self._shortForm.setText(s)
+        self._instruction = i
+        self._shortForm = s
 
     @description.setter
     def description(self, desc_list):
-        self._description.setText(parse_description(self, desc_list))
+        self._description = parse_description(self, desc_list)
 
     @llil.setter
     def llil(self, llil_list):
-        self._LLIL.setText(parse_llil(self, llil_list))
+        self._LLIL = parse_llil(self, llil_list)
 
     @mlil.setter
     def mlil(self, mlil_list):
-        self._MLIL.setText(parse_mlil(self, mlil_list))
+        self._MLIL = parse_mlil(self, mlil_list)
 
     @state.setter
     def state(self, state_list):
-        self._stateDisplay.setPlainText(parse_state(self, state_list))
+        self._stateDisplay = parse_state(self, state_list)
 
     @flags.setter
     def flags(self, tuple_list_list):
-        self._flags.setText(parse_flags(self, tuple_list_list))
+        self._flags = parse_flags(self, tuple_list_list)
 
     def escape(self, in_str):
-        return in_str
+        return html.escape(in_str)
 
 def explain_window():
-    global main_window
+    global window
     # Creates a new window if it doesn't already exist
-    if not hasattr(main_window, 'explain_window'):
-        main_window.explain_window = ExplanationWindow()
-
-    return main_window.explain_window
+    if window is None:
+        window = ExplanationWindow()
+    return window

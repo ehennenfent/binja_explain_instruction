@@ -49,7 +49,8 @@ def get_state(bv, addr):
             output.append("{} = {}".format(reg, out))
 
     sp_max = func.get_reg_value_at(addr, sp).offset
-    for i in range(sp_max, 1):
+    # TODO: What happens when sp_max is None?
+    for i in range(sp_max if sp_max is not None else 0, 1):
         out = func.get_stack_contents_at(addr, i, 1)
         if IsRegisterValueInteresting(out):
             output.append("[SP{:#x}] = {}".format(i, out))
