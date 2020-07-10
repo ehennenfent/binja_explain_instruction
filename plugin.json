@@ -1,25 +1,27 @@
 {
-	"plugin": {
-		"name": "Explain Instruction",
-		"type": ["ui", "education"],
-		"api": "python3",
-		"description": "Displays a window that explains in simple English what an assembly instruction does",
-		"longdescription": "Parses the Lifted IL for an instruction and uses it to generate an English description of what an instruction does. Works best on x86 and x86_64. See: https://github.com/ehennenfent/binja_explain_instruction/blob/master/README.md",
-		"license": {
+	"pluginmetadataversion" : 2,
+	"name": "Explain Instruction",
+	"type": ["ui","helper"],
+	"api": ["python3"],
+	"description": "Displays a window that explains in simple English what an assembly instruction does",
+	"longdescription": "Parses the Lifted IL for an instruction and uses it to (attempt to) generate an English description of what an instruction does. See also: [README.md](https://github.com/ehennenfent/binja_explain_instruction/blob/master/README.md)",
+	"license": {
 			"name": "Apache 2",
 			"text": "https://github.com/ehennenfent/binja_explain_instruction/blob/master/LICENSE"
-		},
-		"dependencies": {
-			"pip": [],
-			"apt": [],
-			"installers": [],
-			"other": []
-		},
-		"version": "1.0 alpha",
-		"author": "Eric Hennenfent",
-		"minimumBinaryNinjaVersion": {
-			"dev": "1.2",
-			"release": "1.2"
-		}
-	}
+	},
+	"platforms" : ["Darwin", "Linux", "Windows"],
+	"dependencies": {
+		"pip": [],
+		"apt": [],
+		"installers": [],
+		"other": []
+	},
+	"installinstructions" : {
+		"Darwin" : "",
+		"Linux" : "",
+		"Windows" : ""
+	},
+	"version": "0.1.0-alpha",
+	"author": "Eric Hennenfent",
+	"minimumbinaryninjaversion": 1200
 }
