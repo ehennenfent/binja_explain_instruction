@@ -2,7 +2,7 @@
 	"plugin": {
 		"name": "Explain Instruction",
 		"type": ["ui", "education"],
-		"api": "python2",
+		"api": "python3",
 		"description": "Displays a window that explains in simple English what an assembly instruction does",
 		"longdescription": "Parses the Lifted IL for an instruction and uses it to generate an English description of what an instruction does. Works best on x86 and x86_64. See: https://github.com/ehennenfent/binja_explain_instruction/blob/master/README.md",
 		"license": {
@@ -11,15 +11,15 @@
 		},
 		"dependencies": {
 			"pip": [],
-			"apt": ["python-pyqt5"],
+			"apt": [],
 			"installers": [],
 			"other": []
 		},
 		"version": "1.0 alpha",
 		"author": "Eric Hennenfent",
 		"minimumBinaryNinjaVersion": {
-			"dev": "1.0.dev-783",
-			"release": "1"
+			"dev": "1.2",
+			"release": "1.2"
 		}
 	}
 }
