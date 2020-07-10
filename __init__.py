@@ -1,13 +1,9 @@
 from binaryninja import LowLevelILOperation, PluginCommand, log_info, log_error
 
-try:
-    from gui import explain_window
-except:
-    log_info("PyQt5 Gui unavailable; falling back to MessageBox hack")
-    from native_gui import explain_window
-from instruction_state import get_state
-from explain import explain_llil, fold_multi_il
-from util import get_function_at, find_mlil, find_llil, find_lifted_il, inst_in_func, dereference_symbols
+from .gui import explain_window
+from .instruction_state import get_state
+from .explain import explain_llil, fold_multi_il
+from .util import get_function_at, find_mlil, find_llil, find_lifted_il, inst_in_func, dereference_symbols
 
 import traceback
 
@@ -21,34 +17,41 @@ def init_plugin(bv):
     # Sets up architecture-specific functions
     if bv.arch.name != arch:
         if 'x86' in bv.arch.name:
-            import x86, x86.explain
-            explain_window().get_doc_url = x86.get_doc_url
-            architecture_specific_explanation_function = x86.explain.arch_explain_instruction
+            from .x86 import get_doc_url
+            from .x86.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         elif 'mips' in bv.arch.name:
-            import mips, mips.explain
-            explain_window().get_doc_url = mips.get_doc_url
-            architecture_specific_explanation_function = mips.explain.arch_explain_instruction
+            from .mips import get_doc_url
+            from .mips.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         elif 'aarch64' in bv.arch.name:
-            import aarch64, aarch64.explain
-            explain_window().get_doc_url = aarch64.get_doc_url
-            architecture_specific_explanation_function = aarch64.explain.arch_explain_instruction
+            from .aarch64 import get_doc_url
+            from .aarch64.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         elif 'arm' in bv.arch.name or 'thumb' in bv.arch.name: # Note: completely untested on thumb2. I couldn't find a test binary.
-            import ual, ual.explain
-            explain_window().get_doc_url = ual.get_doc_url
-            architecture_specific_explanation_function = ual.explain.arch_explain_instruction
+            from .ual import get_doc_url
+            from .ual.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         elif '6502' in bv.arch.name:
-            import asm6502, asm6502.explain
-            explain_window().get_doc_url = asm6502.get_doc_url
-            architecture_specific_explanation_function = asm6502.explain.arch_explain_instruction
+            from .asm6502 import get_doc_url
+            from .asm6502.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         elif 'msp430' in bv.arch.name:
-            import msp430, msp430.explain
-            explain_window().get_doc_url = msp430.get_doc_url
-            architecture_specific_explanation_function = msp430.explain.arch_explain_instruction
+            from .msp430 import get_doc_url
+            from .msp430.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         elif 'powerpc' in bv.arch.name:
             # PowerPC support will likely be added in Binja v1.1; may need to change the arch name
-            import powerpc, powerpc.explain
-            explain_window().get_doc_url = powerpc.get_doc_url
-            architecture_specific_explanation_function = powerpc.explain.arch_explain_instruction
+            from .powerpc import get_doc_url
+            from .powerpc.explain import arch_explain_instruction as arch_explain
+            explain_window().get_doc_url = get_doc_url
+            architecture_specific_explanation_function = arch_explain
         arch = bv.arch.name
 
 def explain_instruction(bv, addr):

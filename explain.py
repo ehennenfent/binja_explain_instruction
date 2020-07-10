@@ -1,6 +1,6 @@
 import json, traceback
 from binaryninja import LowLevelILOperation, LowLevelILInstruction, log_info, log_error, user_plugin_path, ILFlag
-from util import *
+from .util import *
 
 # Instruction attributes that can contain nested LLIL instructions (see preprocess)
 expr_attrs = ['src', 'dest', 'hi', 'lo', 'left', 'right', 'condition']
@@ -43,7 +43,7 @@ def preprocess_LLIL_GOTO(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     func = get_function_at(bv, llil_instruction.address)
     # We have to use the lifted IL since the LLIL ignores comparisons and tests
-    lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_GOTO , find_lifted_il(func, llil_instruction.address)))[0]
+    lifted_instruction = list([k for k in find_lifted_il(func, llil_instruction.address) if k.operation == LowLevelILOperation.LLIL_GOTO])[0]
     lifted_il = func.lifted_il
     llil_instruction.dest = hex(lifted_il[lifted_instruction.dest].address).replace("L","")
     return llil_instruction
@@ -52,7 +52,7 @@ def preprocess_LLIL_IF(bv, llil_instruction):
     """ Replaces integer addresses of llil instructions with hex addresses of assembly """
     func = get_function_at(bv, llil_instruction.address)
     # We have to use the lifted IL since the LLIL ignores comparisons and tests
-    lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(func, llil_instruction.address)))[0]
+    lifted_instruction = list([k for k in find_lifted_il(func, llil_instruction.address) if k.operation == LowLevelILOperation.LLIL_IF])[0]
     lifted_il = func.lifted_il
     llil_instruction.true = hex(lifted_il[lifted_instruction.true].address).replace("L","")
     llil_instruction.false = hex(lifted_il[lifted_instruction.false].address).replace("L","")
@@ -72,7 +72,7 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
             # Sometimes we have a temporary flag that resolves to a Phi function, which makes it show up at the same address.
             # Rather than try to build a conditional tree from the phi function (potentially impossible?) we default back to
             # the CPU flags.
-            lifted_instruction = list(filter(lambda k: k.operation == LowLevelILOperation.LLIL_IF , find_lifted_il(llil_instruction.function.source_function, llil_instruction.address)))[0]
+            lifted_instruction = list([k for k in find_lifted_il(llil_instruction.function.source_function, llil_instruction.address) if k.operation == LowLevelILOperation.LLIL_IF])[0]
             llil_instruction.src = lifted_instruction.condition
             llil_instruction.address = "in multiple code paths"
     elif type(llil_instruction.src) == ILFlag:

@@ -26,7 +26,7 @@ preprocess_dict = {
 def parse_instruction(_bv, instruction, _lifted_il_instrs):
     """ Removes whitespace and commas from the instruction tokens """
     tokens = filter(lambda x : len(x) > 0, [str(token).strip().replace(',', '') for token in str(instruction).split(' ')])
-    return tokens
+    return list(tokens)
 
 def preprocess(bv, parsed, lifted_il_instrs, name):
     """ Apply preprocess functions to instructions """

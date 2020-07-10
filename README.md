@@ -5,9 +5,6 @@ This plugin adds a popup window to Binary Ninja that explains in simple English 
 
 ### Read the Limitations section in detail before using this plugin, or you may find it confuses you more than it helps you.
 
-## Origins
-This project is a product of [NCC Group](https://www.nccgroup.trust/us/)'s 2017 summer internship program. **Further updates will be tracked at [https://github.com/ehennenfent/binja_explain_instruction](https://github.com/ehennenfent/binja_explain_instruction).** NCC Group is not responsible for any further changes made to the repository after August 18th, 2017. 
-
 ## Assumed Knowledge Level
 The descriptions are intended to be simple enough for a novice to understand. However, there is some previous knowledge assumed, notably that the reader understands the concepts of a register, an instruction, the stack, CPU flags, etc. Consider taking a look at [Beginners.re](https://beginners.re/) if you need help with the background.
 

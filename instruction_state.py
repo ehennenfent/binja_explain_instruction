@@ -49,7 +49,7 @@ def get_state(bv, addr):
             output.append("{} = {}".format(reg, out))
 
     sp_max = func.get_reg_value_at(addr, sp).offset
-    for i in xrange(sp_max, 1):
+    for i in range(sp_max, 1):
         out = func.get_stack_contents_at(addr, i, 1)
         if IsRegisterValueInteresting(out):
             output.append("[SP{:#x}] = {}".format(i, out))
@@ -65,7 +65,7 @@ def get_state(bv, addr):
             called_function = bv.get_function_at(dest.constant)
             function_type = called_function.function_type
 
-        for i in xrange(params):
+        for i in range(params):
             out = func.get_parameter_at(addr, function_type, i)
             output.append("arg{} = {}".format(i, out))
 
