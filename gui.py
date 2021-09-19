@@ -1,33 +1,54 @@
-from binaryninjaui import DockHandler, DockContextHandler, UIActionHandler
-from PySide2 import QtCore
-from PySide2.QtCore import Qt, QCoreApplication
-from PySide2.QtWidgets import (
-    QApplication,
+import traceback
+import typing
+from importlib import import_module
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontDatabase, QFont
+from PySide6.QtWidgets import (
     QFrame,
-    QVBoxLayout,
-    QLabel,
-    QWidget,
-    QMainWindow,
-    QTextBrowser,
+)
+from PySide6.QtWidgets import QVBoxLayout, QLabel
+from binaryninja import BinaryView, Architecture, log_error
+from binaryninjaui import SidebarWidget, UIActionHandler
+
+from .explain import explain_llil, fold_multi_il
+from .util import *
+from .util import (
+    get_function_at,
+    find_llil,
+    find_lifted_il,
+    inst_in_func,
+    dereference_symbols,
 )
 
-from PySide2.QtGui import QFontDatabase, QFont
+arch_specific_explanations = {}
+doc_urls = {}
+_remappings = {
+    "arm": "ual",
+    "thumb2": "ual",
+    "6502": "asm6502",
+}
 
-app = QApplication.instance()
-if app is None:
-    app = QCoreApplication.instance()
-# if app is None:
-#     app = qApp
-try:
-    main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
-except IndexError:
-    raise Exception("Could not attach to main window!")
-
-from .util import *
-
-mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
-The MLIL instruction shown may not correspond to this instruction
-alone, or this instruction may not have a direct MLIL equivalent."""
+for arch in Architecture:
+    for supported in (
+        "x86",
+        "mips",
+        "aarch64",
+        "arm",
+        "thumb2",
+        "6502",
+        "msp430",
+        "powerpc",
+    ):
+        if supported in arch.name:
+            doc_urls[arch.name] = import_module(
+                f".{_remappings.get(supported, supported)}",
+                package="binja_explain_instruction",
+            ).get_doc_url
+            arch_specific_explanations[arch.name] = import_module(
+                f".{_remappings.get(supported, supported)}.explain",
+                package="binja_explain_instruction",
+            ).arch_explain_instruction
 
 
 def make_hline():
@@ -37,7 +58,7 @@ def make_hline():
     return out
 
 
-def __None__(*args):
+def no_documentation_available(*_args):
     return [
         (
             "No documentation available",
@@ -46,14 +67,28 @@ def __None__(*args):
     ]
 
 
-class ExplanationWindow(QWidget):
-    """ Displays a brief explanation of what an instruction does """
+def no_arch_specific_explanations_available(*_args):
+    return False, ["Architecture-specific explanations unavailable"]
 
-    def __init__(self):
-        super(ExplanationWindow, self).__init__()
-        self.setWindowTitle("Explain Instruction")
-        self.setLayout(QVBoxLayout())
-        self._layout = self.layout()
+
+class ExplanationWindow(SidebarWidget):
+    """Displays a brief explanation of what an instruction does"""
+
+    def __init__(self, name, _frame, bv: typing.Optional[BinaryView] = None):
+        SidebarWidget.__init__(self, name)
+        self.configured_arch = None
+        self._bv = None
+
+        self.bv = bv
+
+        self.architecture_specific_explanation_function = (
+            no_arch_specific_explanations_available
+        )
+
+        self.actionHandler = UIActionHandler()
+        self.actionHandler.setupActionHandler(self)
+
+        self._layout = QVBoxLayout(self)
 
         self.newline = "\n"
 
@@ -108,19 +143,6 @@ class ExplanationWindow(QWidget):
 
         self._layout.addWidget(make_hline())
 
-        self._labelD = QLabel()
-        self._labelD.setText("Equivalent* MLIL:")
-        self._labelD.setToolTip(mlil_tooltip)
-        self._labelD.setFont(self._labelFont)
-        self._layout.addWidget(self._labelD)
-
-        self._MLIL = QLabel()
-        self._MLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._MLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._MLIL)
-
-        self._layout.addWidget(make_hline())
-
         self._labelG = QLabel()
         self._labelG.setText("Flag Operations:")
         self._labelG.setFont(self._labelFont)
@@ -132,19 +154,9 @@ class ExplanationWindow(QWidget):
 
         self._layout.addWidget(make_hline())
 
-        self._labelE = QLabel()
-        self._labelE.setText("Instruction State:")
-        self._labelE.setFont(self._labelFont)
-        self._layout.addWidget(self._labelE)
-
-        self._stateDisplay = QTextBrowser()
-        self._stateDisplay.setOpenLinks(False)
-        self._stateDisplay.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._layout.addWidget(self._stateDisplay)
-
         self.setObjectName("Explain_Window")
 
-        self.get_doc_url = __None__
+        self.get_doc_url = no_documentation_available
 
     @property
     def instruction(self):
@@ -157,14 +169,6 @@ class ExplanationWindow(QWidget):
     @property
     def llil(self):
         return self._LLIL.text()
-
-    @property
-    def mlil(self):
-        return self._MLIL.text()
-
-    @property
-    def state(self):
-        return self._stateDisplay.toPlainText()
 
     @property
     def flags(self):
@@ -184,26 +188,99 @@ class ExplanationWindow(QWidget):
     def llil(self, llil_list):
         self._LLIL.setText(parse_llil(self, llil_list))
 
-    @mlil.setter
-    def mlil(self, mlil_list):
-        self._MLIL.setText(parse_mlil(self, mlil_list))
-
-    @state.setter
-    def state(self, state_list):
-        self._stateDisplay.setPlainText(parse_state(self, state_list))
-
     @flags.setter
     def flags(self, tuple_list_list):
         self._flags.setText(parse_flags(self, tuple_list_list))
 
+    @property
+    def bv(self):
+        return self._bv
+
+    @bv.setter
+    def bv(self, new_bv: typing.Optional[BinaryView]):
+        self._bv = new_bv
+        if self._bv is not None:
+            self.configure_for_arch(self._bv.arch)
+
     def escape(self, in_str):
         return in_str
 
+    def explain_instruction(self, addr):
+        """Callback for the menu item that passes the information to the GUI"""
+        # Get the relevant information for this address
+        func = get_function_at(self.bv, addr)
+        instruction = inst_in_func(func, addr)
+        lifted_il_list = find_lifted_il(func, addr)
+        llil_list = find_llil(func, addr)
 
-def explain_window():
-    global main_window
-    # Creates a new window if it doesn't already exist
-    if not hasattr(main_window, "explain_window"):
-        main_window.explain_window = ExplanationWindow()
+        # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
+        # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
+        parse_il = fold_multi_il(
+            self.bv, llil_list if len(llil_list) > 0 else lifted_il_list
+        )
 
-    return main_window.explain_window
+        # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
+        # over the one generated via the LLIL
+        (
+            should_supersede_llil,
+            explanation_list,
+        ) = self.architecture_specific_explanation_function(
+            self.bv, instruction, lifted_il_list
+        )
+
+        # Display the raw instruction
+        try:
+            self.instruction = "{addr}:  {inst}".format(
+                addr=hex(addr).replace("L", ""), inst=instruction
+            )
+        except Exception:
+            log_error(traceback.format_exc())
+
+        if len(explanation_list) > 0:
+            if should_supersede_llil:
+                # If we got an architecture-specific explanation and it should supersede the LLIL, use that
+                self.description = [explanation for explanation in explanation_list]
+            else:
+                # Otherwise, just prepend the arch-specific explanation to the LLIL explanation
+                self.description = [explanation for explanation in explanation_list] + [
+                    explain_llil(self.bv, llil) for llil in (parse_il)
+                ]
+        else:
+            # By default, we just use the LLIL explanation
+            # We append the line number if we're displaying a conditional.
+            self.description = [explain_llil(self.bv, llil) for llil in parse_il]
+
+        # Display the  LLIL, dereferencing anything that looks like a hex number into a symbol if possible
+        self.llil = [dereference_symbols(self.bv, llil) for llil in llil_list]
+
+        # Pass in the flags, straight from the API. We don't do much with these, but they might make things more clear
+        self.flags = [
+            (
+                func.get_flags_read_by_lifted_il_instruction(lifted.instr_index),
+                func.get_flags_written_by_lifted_il_instruction(lifted.instr_index),
+                lifted,
+            )
+            for lifted in lifted_il_list
+        ]
+
+    def configure_for_arch(self, arch: Architecture):
+        self.configured_arch = arch
+        self.architecture_specific_explanation_function = (
+            arch_specific_explanations.get(
+                arch.name, no_arch_specific_explanations_available
+            )
+        )
+        self.get_doc_url = doc_urls.get(arch.name, no_documentation_available)
+
+    def notifyOffsetChanged(self, offset):
+        self.explain_instruction(offset)
+
+    def notifyViewChanged(self, view_frame):
+        if view_frame is None:
+            self.bv = None
+        else:
+            view = view_frame.getCurrentViewInterface()
+            self.bv = view.getData()
+
+    def contextMenuEvent(self, event):
+        self.m_contextMenuManager.show(self.m_menu, self.actionHandler)
