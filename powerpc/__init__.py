@@ -2500,7 +2500,7 @@ def find_proper_name(instruction):
 
 
 def get_doc_url(i):
-    """ Takes in the instruction tokens and returns [(short form, doc url)] """
+    """Takes in the instruction tokens and returns [(short form, doc url)]"""
     names = map(find_proper_name, i)  # handles instruction prefixes
     output = []
     for name in names:

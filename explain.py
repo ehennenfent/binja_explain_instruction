@@ -32,7 +32,7 @@ with open(path, "r") as explanation_file:
 
 
 def preprocess_LLIL_CONST(_bv, llil_instruction):
-    """ Replaces integer constants with hex tokens """
+    """Replaces integer constants with hex tokens"""
     llil_instruction.constant = llil_instruction.tokens[
         0
     ]  # hex(llil_instruction.constant).replace('L','')
@@ -40,7 +40,7 @@ def preprocess_LLIL_CONST(_bv, llil_instruction):
 
 
 def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
-    """ Replaces integer constants with symbols (if available) and hex tokens otherwise """
+    """Replaces integer constants with symbols (if available) and hex tokens otherwise"""
     found_symbol = False
     for symbol in bv.get_symbols():
         if symbol.address == llil_instruction.constant:
@@ -53,13 +53,13 @@ def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
 
 
 def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
-    """ Expands FLAG_COND enums """
+    """Expands FLAG_COND enums"""
     llil_instruction.condition = explanations[llil_instruction.condition.name]
     return llil_instruction
 
 
 def preprocess_LLIL_GOTO(bv, llil_instruction):
-    """ Replaces integer addresses of llil instructions with hex addresses of assembly """
+    """Replaces integer addresses of llil instructions with hex addresses of assembly"""
     func = get_function_at(bv, llil_instruction.address)
     # We have to use the lifted IL since the LLIL ignores comparisons and tests
     lifted_instruction = list(
@@ -77,7 +77,7 @@ def preprocess_LLIL_GOTO(bv, llil_instruction):
 
 
 def preprocess_LLIL_IF(bv, llil_instruction):
-    """ Replaces integer addresses of llil instructions with hex addresses of assembly """
+    """Replaces integer addresses of llil instructions with hex addresses of assembly"""
     func = get_function_at(bv, llil_instruction.address)
     # We have to use the lifted IL since the LLIL ignores comparisons and tests
     lifted_instruction = list(
@@ -98,7 +98,7 @@ def preprocess_LLIL_IF(bv, llil_instruction):
 
 
 def preprocess_LLIL_FLAG(bv, llil_instruction):
-    """ Follow back temporary flags and append the address where they're created """
+    """Follow back temporary flags and append the address where they're created"""
     if llil_instruction.src.temp:
         flag = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
@@ -137,7 +137,7 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
 
 
 def preprocess_LLIL_REG(_bv, llil_instruction):
-    """ Follow back temporary registers and append the address where they're created """
+    """Follow back temporary registers and append the address where they're created"""
     if llil_instruction.src.temp:
         reg = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_reg_definition(reg)
@@ -173,7 +173,7 @@ preprocess_dict = {
 
 
 def preprocess(bv, llil_instruction):
-    """ Apply preprocess functions to instructions and expand explanations for nested LLIL operations """
+    """Apply preprocess functions to instructions and expand explanations for nested LLIL operations"""
     if llil_instruction.operation.name in preprocess_dict:
         out = preprocess_dict[llil_instruction.operation.name](bv, llil_instruction)
         llil_instruction = out if out is not None else llil_instruction
@@ -198,7 +198,7 @@ def preprocess(bv, llil_instruction):
 
 
 def explain_llil(bv, llil_instruction):
-    """ Returns the explanation string from explanations_en.json, formatted with the preprocessed LLIL instruction """
+    """Returns the explanation string from explanations_en.json, formatted with the preprocessed LLIL instruction"""
     if llil_instruction is None:
         return
     if llil_instruction.operation.name in explanations:
@@ -222,7 +222,7 @@ def explain_llil(bv, llil_instruction):
 
 
 def fold_multi_il(_bv, llil_list):
-    """ Filters out the setting of temporary registers and flags """
+    """Filters out the setting of temporary registers and flags"""
     out = []
     # This doesn't do any "folding" right now. In the future, we could fold temporary variables into
     # instructions that use them rather than seeking them in the preprocess functions, but there are some issues

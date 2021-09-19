@@ -1,6 +1,6 @@
 def get_function_at(bv, addr):
-    """ Gets the function that contains a given address, even if that address
-    isn't the start of the function """
+    """Gets the function that contains a given address, even if that address
+    isn't the start of the function"""
     blocks = bv.get_basic_blocks_at(addr)
     return blocks[0].function if (blocks is not None and len(blocks) > 0) else None
 
@@ -18,7 +18,7 @@ def find_lifted_il(func, addr):
 
 
 def find_in_IL(il, addr):
-    """ Finds everything at the given address within the IL function passed in """
+    """Finds everything at the given address within the IL function passed in"""
     out = []
     for block in il:
         for instruction in block:
@@ -28,12 +28,12 @@ def find_in_IL(il, addr):
 
 
 def inst_in_func(func, addr):
-    """ Finds an assembly function at the address given """
+    """Finds an assembly function at the address given"""
     return func.view.get_disassembly(addr)
 
 
 def dereference_symbols(bv, il_instruction):
-    """ If the instruction contains anything that looks vaguely like a hex
+    """If the instruction contains anything that looks vaguely like a hex
     number, see if there's a function there, and if so, replace it with the
     function symbol."""
     if il_instruction is not None:
@@ -53,7 +53,7 @@ def dereference_symbols(bv, il_instruction):
 
 
 def parse_instruction(context, instr):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
+    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
     if instr is not None:
         docs = context.get_doc_url(instr.split(" "))
         instruction = context.escape(instr.replace("    ", " "))
@@ -75,7 +75,7 @@ def parse_description(context, desc_list):
 
 
 def parse_llil(context, llil_list):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
+    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
     newText = ""
     for llil in llil_list:
         if llil is not None:
@@ -92,7 +92,7 @@ def parse_llil(context, llil_list):
 
 
 def parse_mlil(context, mlil_list):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
+    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
     newText = ""
     for mlil in mlil_list:
         if mlil is not None:
@@ -116,7 +116,7 @@ def parse_state(context, state_list):
 
 
 def rec_replace(in_str, old, new):
-    """ Recursively replace a string in a string """
+    """Recursively replace a string in a string"""
     if old == new:
         return in_str
     if old not in in_str:
@@ -125,7 +125,7 @@ def rec_replace(in_str, old, new):
 
 
 def parse_flags(context, tuple_list_list):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
+    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
     out = ""
     for f_read, f_written, lifted in tuple_list_list:
         if len(f_read) > 0:
