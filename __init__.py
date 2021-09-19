@@ -1,6 +1,6 @@
 from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QImage, QPainter, QFont, QColor
-from binaryninjaui import SidebarWidgetType, Sidebar
+from binaryninjaui import SidebarWidgetType, Sidebar, getDefaultMonospaceFont
 
 from .gui import ExplanationWindow
 
@@ -14,10 +14,12 @@ class ExplainSidebarWidgetType(SidebarWidgetType):
         icon = QImage(56, 56, QImage.Format_RGB32)
         icon.fill(0)
 
-        # Render an "H" as the example icon
+        self.font: QFont = getDefaultMonospaceFont()
+        self.font.setPointSize(56)
+
         p = QPainter()
         p.begin(icon)
-        p.setFont(QFont("Open Sans", 56))
+        p.setFont(self.font)
         p.setPen(QColor(255, 255, 255, 255))
         p.drawText(QRectF(0, 0, 56, 56), Qt.AlignCenter, "E")
         p.end()

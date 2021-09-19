@@ -209,6 +209,9 @@ class ExplanationWindow(SidebarWidget):
         """Callback for the menu item that passes the information to the GUI"""
         # Get the relevant information for this address
         func = get_function_at(self.bv, addr)
+        if func is None:
+            return self.reset()
+
         instruction = inst_in_func(func, addr)
         lifted_il_list = find_lifted_il(func, addr)
         llil_list = find_llil(func, addr)
@@ -251,7 +254,9 @@ class ExplanationWindow(SidebarWidget):
             self.description = [explain_llil(self.bv, llil) for llil in parse_il]
 
         # Display the  LLIL, dereferencing anything that looks like a hex number into a symbol if possible
-        self.llil = [dereference_symbols(self.bv, llil) for llil in llil_list]
+        self.llil = (
+            llil_list  # [dereference_symbols(self.bv, llil) for llil in llil_list]
+        )
 
         # Pass in the flags, straight from the API. We don't do much with these, but they might make things more clear
         self.flags = [
@@ -262,6 +267,12 @@ class ExplanationWindow(SidebarWidget):
             )
             for lifted in lifted_il_list
         ]
+
+    def reset(self):
+        self.instruction = None
+        self.description = []
+        self.llil = []
+        self.flags = []
 
     def configure_for_arch(self, arch: Architecture):
         self.configured_arch = arch
