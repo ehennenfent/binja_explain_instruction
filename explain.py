@@ -1,12 +1,14 @@
-import json, traceback
+import json
+import traceback
+
 from binaryninja import (
     LowLevelILOperation,
     LowLevelILInstruction,
     log_info,
     log_error,
-    user_plugin_path,
     ILFlag,
 )
+
 from .util import *
 
 # Instruction attributes that can contain nested LLIL instructions (see preprocess)
