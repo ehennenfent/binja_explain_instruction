@@ -1,6 +1,3 @@
-import re
-
-# Many of these instructions have multiple forms, which we don't adequately handle. Fixing this is left as an exercise to the reader.
 instrs = {
     "ADC": [
         {
@@ -2556,31 +2553,3 @@ instrs = {
         }
     ],
 }
-
-reg = re.compile("B[LNEG][ETQ]")
-
-
-def find_proper_name(instruction):
-    out = str(instruction).strip().upper()
-    if reg.match(out):
-        return "B"
-    return out
-
-
-def get_doc_url(i):
-    """Takes in the instruction tokens and returns [(short form, doc url)]"""
-    names = map(find_proper_name, i)  # handles instruction prefixes
-    output = []
-    for name in names:
-        if name in instrs.keys():
-            inst_l = instrs[name]
-            for inst_data in inst_l:
-                output.append((inst_data["short"], inst_data["link"]))
-    if len(output) == 0:
-        return [
-            (
-                "No documentation for that instruction!",
-                "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md",
-            )
-        ]
-    return output
