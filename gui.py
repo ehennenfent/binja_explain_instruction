@@ -76,6 +76,9 @@ class ExplanationWindow(SidebarWidget):
 
     def __init__(self, name, _frame, bv: typing.Optional[BinaryView] = None):
         SidebarWidget.__init__(self, name)
+        self.actionHandler = UIActionHandler()
+        self.actionHandler.setupActionHandler(self)
+
         self.configured_arch = None
         self._bv = None
 
@@ -84,9 +87,7 @@ class ExplanationWindow(SidebarWidget):
         self.architecture_specific_explanation_function = (
             no_arch_specific_explanations_available
         )
-
-        self.actionHandler = UIActionHandler()
-        self.actionHandler.setupActionHandler(self)
+        self.get_doc_url = no_documentation_available
 
         self._layout = QVBoxLayout(self)
 
@@ -132,7 +133,7 @@ class ExplanationWindow(SidebarWidget):
         self._layout.addWidget(make_hline())
 
         self._labelC = QLabel()
-        self._labelC.setText("Equivalent LLIL:")
+        self._labelC.setText("Corresponding LLIL:")
         self._labelC.setFont(self._labelFont)
         self._layout.addWidget(self._labelC)
 
@@ -140,23 +141,6 @@ class ExplanationWindow(SidebarWidget):
         self._LLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
         self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._LLIL)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelG = QLabel()
-        self._labelG.setText("Flag Operations:")
-        self._labelG.setFont(self._labelFont)
-        self._layout.addWidget(self._labelG)
-
-        self._flags = QLabel()
-        self._flags.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._flags)
-
-        self._layout.addWidget(make_hline())
-
-        self.setObjectName("Explain_Window")
-
-        self.get_doc_url = no_documentation_available
 
     @property
     def instruction(self):
@@ -169,10 +153,6 @@ class ExplanationWindow(SidebarWidget):
     @property
     def llil(self):
         return self._LLIL.text()
-
-    @property
-    def flags(self):
-        return self._flags.text()
 
     @instruction.setter
     def instruction(self, instr):
@@ -187,10 +167,6 @@ class ExplanationWindow(SidebarWidget):
     @llil.setter
     def llil(self, llil_list):
         self._LLIL.setText(parse_llil(self, llil_list))
-
-    @flags.setter
-    def flags(self, tuple_list_list):
-        self._flags.setText(parse_flags(self, tuple_list_list))
 
     @property
     def bv(self):
@@ -258,21 +234,10 @@ class ExplanationWindow(SidebarWidget):
             llil_list  # [dereference_symbols(self.bv, llil) for llil in llil_list]
         )
 
-        # Pass in the flags, straight from the API. We don't do much with these, but they might make things more clear
-        self.flags = [
-            (
-                func.get_flags_read_by_lifted_il_instruction(lifted.instr_index),
-                func.get_flags_written_by_lifted_il_instruction(lifted.instr_index),
-                lifted,
-            )
-            for lifted in lifted_il_list
-        ]
-
     def reset(self):
         self.instruction = None
         self.description = []
         self.llil = []
-        self.flags = []
 
     def configure_for_arch(self, arch: Architecture):
         self.configured_arch = arch
