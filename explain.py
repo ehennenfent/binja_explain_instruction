@@ -120,7 +120,7 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
             llil_instruction.address = "in multiple code paths"
     elif type(llil_instruction.src) == ILFlag:
         # On occasion, binja won't know what to do with a CPU flag and will use it "raw" without figuring
-        # out what the conditonal means. Happens with the direction flag on x86 sometimes.
+        # out what the conditional means. Happens with the direction flag on x86 sometimes.
         llil_instruction.src = (
             bv.arch.flag_roles[llil_instruction.src.name].name.replace("Role", "")
             + " is set"
@@ -202,12 +202,12 @@ def explain_llil(bv, llil_instruction):
             )
         except AttributeError:
             # Usually a bad format string. Shouldn't show up unless something truly weird happens.
-            log_error("Bad Format String in binja_explain_instruction")
-            traceback.print_exc()
+            log_error("Bad Format String in LLIL Explanation")
+            log_error(traceback.format_exc())
             return llil_instruction.operation.name
     # If there's anything in the LLIL that doesn't have an explanation, yell about it in the logs
     log_info(
-        "binja_explain_instruction doen't understand "
+        "Explain Instruction doesn't understand "
         + llil_instruction.operation.name
         + " yet"
     )
