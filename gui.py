@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QFrame,
 )
 from PySide6.QtWidgets import QVBoxLayout, QLabel
-from binaryninja import BinaryView, Architecture, log_error
+from binaryninja import BinaryView, Architecture, log_error, LowLevelILInstruction
 from binaryninjaui import SidebarWidget, UIActionHandler
 
 from .util import rec_replace
@@ -134,18 +134,47 @@ class ExplanationWindow(SidebarWidget):
         return self._LLIL.text()
 
     @instruction.setter
-    def instruction(self, instr):
-        i, s = parse_instruction(self, instr)
-        self._instruction.setText(i)
-        self._shortForm.setText(s)
+    def instruction(self, instr: str):
+        if instr is not None:
+            docs = self.arch_explainer.get_doc_url(instr.split(" "))
+            instruction = self.escape(instr.replace("    ", " "))
+            shortForm = self.newline.join(
+                '<a href="{href}">{form}</a>'.format(
+                    href=url, form=self.escape(short_form)
+                )
+                for short_form, url in docs
+            )
+            self._instruction.setText(instruction)
+            self._shortForm.setText(shortForm)
+        else:
+            self._instruction.setText("None")
+            self._shortForm.setText("None")
 
     @description.setter
-    def description(self, desc_list):
-        self._description.setText(parse_description(self, desc_list))
+    def description(self, desc_list: typing.List[str]):
+        self._description.setText(
+            self.newline.join(
+                self.escape(new_description) for new_description in desc_list
+            )
+        )
 
     @llil.setter
-    def llil(self, llil_list):
-        self._LLIL.setText(parse_llil(self, llil_list))
+    def llil(self, llil_list: typing.List[LowLevelILInstruction]):
+        newText = ""
+        for llil in llil_list:
+            if llil is not None:
+                tokens = (
+                    llil.deref_tokens if hasattr(llil, "deref_tokens") else llil.tokens
+                )
+                newText += "{}: ".format(llil.instr_index)
+                newText += "".join(self.escape(str(token)) for token in tokens)
+            else:
+                newText += "None"
+            newText += self.newline
+        if len(llil_list) > 0:
+            self._LLIL.setText(newText.strip(self.newline))
+        else:
+            self._LLIL.setText("None")
 
     @property
     def bv(self):
@@ -157,7 +186,8 @@ class ExplanationWindow(SidebarWidget):
         if self._bv is not None:
             self.configure_for_arch(self._bv.arch)
 
-    def escape(self, in_str):
+    @staticmethod
+    def escape(in_str):
         return in_str
 
     def explain_instruction(self, addr):
@@ -234,98 +264,3 @@ class ExplanationWindow(SidebarWidget):
 
     def contextMenuEvent(self, event):
         self.m_contextMenuManager.show(self.m_menu, self.actionHandler)
-
-
-def parse_instruction(context, instr):
-    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
-    if instr is not None:
-        docs = context.arch_explainer.get_doc_url(instr.split(" "))
-        instruction = context.escape(instr.replace("    ", " "))
-        shortForm = context.newline.join(
-            '<a href="{href}">{form}</a>'.format(
-                href=url, form=context.escape(short_form)
-            )
-            for short_form, url in docs
-        )
-        return instruction, shortForm
-    else:
-        return "None", "None"
-
-
-def parse_description(context, desc_list):
-    return context.newline.join(
-        context.escape(new_description) for new_description in desc_list
-    )
-
-
-def parse_llil(context, llil_list):
-    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
-    newText = ""
-    for llil in llil_list:
-        if llil is not None:
-            tokens = llil.deref_tokens if hasattr(llil, "deref_tokens") else llil.tokens
-            newText += "{}: ".format(llil.instr_index)
-            newText += "".join(context.escape(str(token)) for token in tokens)
-        else:
-            newText += "None"
-        newText += context.newline
-    if len(llil_list) > 0:
-        return newText.strip(context.newline)
-    else:
-        return "None"
-
-
-def parse_mlil(context, mlil_list):
-    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
-    newText = ""
-    for mlil in mlil_list:
-        if mlil is not None:
-            tokens = mlil.deref_tokens if hasattr(mlil, "deref_tokens") else mlil.tokens
-            newText += "{}: ".format(mlil.instr_index)
-            newText += "".join(context.escape(str(token)) for token in tokens)
-        else:
-            newText += "None"
-        newText += context.newline
-    if len(mlil_list) > 0:
-        return newText.strip(context.newline)
-    else:
-        return "None"
-
-
-def parse_state(context, state_list):
-    if state_list is not None:
-        return context.newline.join(context.escape(state) for state in state_list)
-    else:
-        return "None"
-
-
-def parse_flags(context, tuple_list_list):
-    """Helps the GUI go from lists of instruction data to a cleanly formatted string"""
-    out = ""
-    for f_read, f_written, lifted in tuple_list_list:
-        if len(f_read) > 0:
-            out += (
-                (
-                    "(Lifted IL: {}) ".format(lifted.instr_index)
-                    if len(tuple_list_list) > 1
-                    else ""
-                )
-                + "Reads: "
-                + ", ".join(f_read)
-                + context.newline
-            )
-        if len(f_written) > 0:
-            out += (
-                (
-                    "(Lifted IL: {}) ".format(lifted.instr_index)
-                    if len(tuple_list_list) > 1
-                    else ""
-                )
-                + "Writes: "
-                + ", ".join(f_written)
-                + context.newline
-            )
-        out += context.newline
-    out = rec_replace(out.strip(context.newline), context.newline * 2, context.newline)
-    out = "None" if len(out) == 0 else out
-    return out
