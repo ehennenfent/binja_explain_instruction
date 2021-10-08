@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QVBoxLayout, QLabel
 from binaryninja import BinaryView, Architecture, log_error, LowLevelILInstruction
 from binaryninjaui import SidebarWidget, UIActionHandler
 
-from .util import rec_replace
 from .explain import explain_llil, fold_multi_il
 from .util import (
     get_function_at,
@@ -19,31 +18,7 @@ from .util import (
     inst_in_func,
 )
 
-from . import explainers
-from .explainers.generic import UnavailableExplainer
-
-arch_explainer_constructors = {}
-_remappings = {
-    "arm": "ual",
-    "thumb2": "ual",
-    "6502": "asm6502",
-}
-
-for arch in Architecture:
-    for supported in (
-        "x86",
-        "mips",
-        "aarch64",
-        "arm",
-        "thumb2",
-        "6502",
-        "msp430",
-        "powerpc",
-    ):
-        if supported in arch.name:
-            arch_explainer_constructors[arch.name] = getattr(
-                explainers, f"{_remappings.get(supported, supported)}_explainer"
-            )
+from .explainers import explainer_for_architecture
 
 
 def make_hline():
@@ -248,9 +223,7 @@ class ExplanationWindow(SidebarWidget):
 
     def configure_for_arch(self, arch: Architecture):
         self.configured_arch = arch
-        self.arch_explainer = arch_explainer_constructors.get(
-            arch.name, UnavailableExplainer
-        )(self.bv)
+        self.arch_explainer = explainer_for_architecture(arch)(self.bv)
 
     def notifyOffsetChanged(self, offset):
         self.explain_instruction(offset)
