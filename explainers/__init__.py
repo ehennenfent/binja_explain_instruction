@@ -1,4 +1,3 @@
-# Import as lowercase here so we can use string formatting to import them later
 from binaryninja import Architecture
 
 from .x86 import X86Explainer

@@ -1,4 +1,3 @@
-from .explanations import il_explanations as explanations
 import traceback
 
 from binaryninja import (
@@ -9,6 +8,7 @@ from binaryninja import (
     ILFlag,
 )
 
+from .explanations import il_explanations as explanations
 from .util import *
 
 # Instruction attributes that can contain nested LLIL instructions (see preprocess)

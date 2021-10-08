@@ -2,13 +2,27 @@ import traceback
 import typing
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontDatabase, QFont
+from PySide6.QtGui import QFontDatabase, QFont, QColor
 from PySide6.QtWidgets import (
     QFrame,
 )
 from PySide6.QtWidgets import QVBoxLayout, QLabel
-from binaryninja import BinaryView, Architecture, log_error, LowLevelILInstruction
-from binaryninjaui import SidebarWidget, UIActionHandler
+from binaryninja import (
+    BinaryView,
+    Architecture,
+    log_error,
+    LowLevelILInstruction,
+    InstructionTextTokenType,
+    ThemeColor,
+    InstructionTextToken,
+)
+from binaryninjaui import (
+    SidebarWidget,
+    UIActionHandler,
+    getTokenColor,
+    getThemeColor,
+    getMonospaceFont,
+)
 
 from .explain import explain_llil, fold_multi_il
 from .util import (
@@ -16,6 +30,8 @@ from .util import (
     find_llil,
     find_lifted_il,
     inst_in_func,
+    colorize,
+    get_instruction,
 )
 
 from .explainers import explainer_for_architecture
@@ -43,29 +59,29 @@ class ExplanationWindow(SidebarWidget):
         # Configures configured_arch, _bv, and arch_explainer
         self.bv = bv
 
+        self.colors = {t: getTokenColor(self, t) for t in InstructionTextTokenType}
+
         self._layout = QVBoxLayout(self)
 
         self.newline = "\n"
 
-        self._labelFont = QFont()
-        self._labelFont.setPointSize(12)
+        self._label_font = QFont()
+        self._mono_font = getMonospaceFont(self)
 
-        self._labelA = QLabel()
-        self._labelA.setText("Instruction:")
-        self._labelA.setFont(self._labelFont)
-        self._layout.addWidget(self._labelA)
+        def make_label(text):
+            label = QLabel(text)
+            label.setFont(self._label_font)
+            return label
 
         self._instruction = QLabel()
-        self._instruction.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._instruction.setFont(self._mono_font)
         self._instruction.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._instruction)
 
         self._layout.addWidget(make_hline())
 
-        self._labelF = QLabel()
-        self._labelF.setText("Short Form:")
-        self._labelF.setFont(self._labelFont)
-        self._layout.addWidget(self._labelF)
+        self._short_form_label = make_label("Short Form:")
+        self._layout.addWidget(self._short_form_label)
 
         self._shortForm = QLabel()
         self._shortForm.setTextFormat(Qt.RichText)
@@ -75,10 +91,8 @@ class ExplanationWindow(SidebarWidget):
 
         self._layout.addWidget(make_hline())
 
-        self._labelB = QLabel()
-        self._labelB.setText("Description:")
-        self._labelB.setFont(self._labelFont)
-        self._layout.addWidget(self._labelB)
+        self._description_label = make_label("Description:")
+        self._layout.addWidget(self._description_label)
 
         self._description = QLabel()
         self._description.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -86,13 +100,11 @@ class ExplanationWindow(SidebarWidget):
 
         self._layout.addWidget(make_hline())
 
-        self._labelC = QLabel()
-        self._labelC.setText("Corresponding LLIL:")
-        self._labelC.setFont(self._labelFont)
-        self._layout.addWidget(self._labelC)
+        self._llil_label = make_label("Corresponding LLIL:")
+        self._layout.addWidget(self._llil_label)
 
         self._LLIL = QLabel()
-        self._LLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._LLIL.setFont(self._mono_font)
         self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._layout.addWidget(self._LLIL)
 
@@ -108,30 +120,17 @@ class ExplanationWindow(SidebarWidget):
     def llil(self):
         return self._LLIL.text()
 
+    @property
+    def short_form(self):
+        return self._shortForm.text()
+
     @instruction.setter
-    def instruction(self, instr: str):
-        if instr is not None:
-            docs = self.arch_explainer.get_doc_url(instr.split(" "))
-            instruction = self.escape(instr.replace("    ", " "))
-            shortForm = self.newline.join(
-                '<a href="{href}">{form}</a>'.format(
-                    href=url, form=self.escape(short_form)
-                )
-                for short_form, url in docs
-            )
-            self._instruction.setText(instruction)
-            self._shortForm.setText(shortForm)
-        else:
-            self._instruction.setText("None")
-            self._shortForm.setText("None")
+    def instruction(self, instr: typing.Optional[str]):
+        self._instruction.setText(str(instr))
 
     @description.setter
     def description(self, desc_list: typing.List[str]):
-        self._description.setText(
-            self.newline.join(
-                self.escape(new_description) for new_description in desc_list
-            )
-        )
+        self._description.setText("\n".join(desc_list))
 
     @llil.setter
     def llil(self, llil_list: typing.List[LowLevelILInstruction]):
@@ -151,6 +150,10 @@ class ExplanationWindow(SidebarWidget):
         else:
             self._LLIL.setText("None")
 
+    @short_form.setter
+    def short_form(self, new_short_form: typing.Optional[str]):
+        self._shortForm.setText(str(new_short_form))
+
     @property
     def bv(self):
         return self._bv
@@ -167,57 +170,46 @@ class ExplanationWindow(SidebarWidget):
 
     def explain_instruction(self, addr):
         """Callback for the menu item that passes the information to the GUI"""
+
         # Get the relevant information for this address
         func = get_function_at(self.bv, addr)
         if func is None:
             return self.reset()
+        instruction = get_instruction(self.bv, addr)
 
-        instruction = inst_in_func(func, addr)
-        lifted_il_list = find_lifted_il(func, addr)
-        llil_list = find_llil(func, addr)
-
-        # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
-        # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
-        parse_il = fold_multi_il(
-            self.bv, llil_list if len(llil_list) > 0 else lifted_il_list
-        )
-
-        # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
-        # over the one generated via the LLIL
-        (
-            should_supersede_llil,
-            explanation_list,
-        ) = self.arch_explainer.explain_instruction(instruction, lifted_il_list)
-
-        # Display the raw instruction
-        try:
-            self.instruction = "{addr}:  {inst}".format(
-                addr=hex(addr).replace("L", ""), inst=instruction
+        with Atomic():
+            self.instruction = (
+                f"<font color={getThemeColor(ThemeColor.AddressColor).name()}>"
+                f"{addr:^0{self.bv.arch.address_size}x}</font>:  "
+                f"{''.join(colorize(self.colors, instruction))}"
             )
-        except Exception:
-            log_error(traceback.format_exc())
 
-        if len(explanation_list) > 0:
-            if should_supersede_llil:
-                # If we got an architecture-specific explanation and it should supersede the LLIL, use that
-                self.description = [explanation for explanation in explanation_list]
-            else:
-                # Otherwise, just prepend the arch-specific explanation to the LLIL explanation
-                self.description = [explanation for explanation in explanation_list] + [
-                    explain_llil(self.bv, llil) for llil in (parse_il)
-                ]
-        else:
-            # By default, we just use the LLIL explanation
-            # We append the line number if we're displaying a conditional.
-            self.description = [explain_llil(self.bv, llil) for llil in parse_il]
+        with Atomic():
+            docs = self.arch_explainer.get_doc_url(instruction)
+            self.short_form = "\n".join(
+                '<a href="{href}">{form}</a>'.format(href=url, form=short_form)
+                for short_form, url in docs
+            )
 
-        # Display the LLIL, dereferencing anything that looks like a hex number into a symbol if possible
-        self.llil = (
-            llil_list  # [dereference_symbols(self.bv, llil) for llil in llil_list]
-        )
+        self._description.setText("Generating description...")
+
+        lifted_il_list = func.get_lifted_ils_at(addr)
+        llil_list = func.get_llils_at(addr)
+
+        with Atomic():
+            # Display the LLIL, dereferencing anything that looks like a hex number into a symbol if possible
+            self.llil = (
+                llil_list  # [dereference_symbols(self.bv, llil) for llil in llil_list]
+            )
+
+        with Atomic():
+            self.description = make_description(
+                self.bv, self.arch_explainer, instruction, lifted_il_list, llil_list
+            )
 
     def reset(self):
         self.instruction = None
+        self.short_form = None
         self.description = []
         self.llil = []
 
@@ -237,3 +229,46 @@ class ExplanationWindow(SidebarWidget):
 
     def contextMenuEvent(self, event):
         self.m_contextMenuManager.show(self.m_menu, self.actionHandler)
+
+    def notifyThemeChanged(self, *args, **kwargs):
+        self.repaint()
+
+    def notifyFontChanged(self, *args, **kwargs):
+        self._label_font = (
+            QFont()
+        )  # I don't know how to get a non-monospaced font from the Binja UI API
+        self._mono_font = getMonospaceFont(self)
+
+        self._short_form_label.setFont(self._label_font)
+        self._description_label.setFont(self._label_font)
+        self._llil_label.setFont(self._label_font)
+
+        self._instruction.setFont(self._mono_font)
+        self._LLIL.setFont(self._mono_font)
+
+
+class Atomic:
+    """Suppresses all exceptions within the wrapped context"""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_value is not None:
+            log_error(traceback.format_exc())
+        return True
+
+
+def make_description(bv, arch_explainer, instruction, lifted_il_list, llil_list):
+    # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
+    # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
+    parse_il = fold_multi_il(bv, llil_list if len(llil_list) > 0 else lifted_il_list)
+    # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
+    # over the one generated via the LLIL
+    (
+        should_supersede,
+        explanation_list,
+    ) = arch_explainer.explain_instruction(instruction, lifted_il_list)
+    return explanation_list + (
+        [] if should_supersede else [explain_llil(bv, llil) for llil in parse_il]
+    )
