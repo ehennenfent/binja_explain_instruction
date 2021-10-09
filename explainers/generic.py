@@ -1,5 +1,4 @@
 import traceback
-from binaryninja import log_error, BinaryView
 
 from ..util import *
 

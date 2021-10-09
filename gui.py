@@ -2,7 +2,7 @@ import traceback
 import typing
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontDatabase, QFont, QColor
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFrame,
 )
@@ -10,11 +10,9 @@ from PySide6.QtWidgets import QVBoxLayout, QLabel
 from binaryninja import (
     BinaryView,
     Architecture,
-    log_error,
     LowLevelILInstruction,
     InstructionTextTokenType,
     ThemeColor,
-    InstructionTextToken,
 )
 from binaryninjaui import (
     SidebarWidget,
@@ -25,16 +23,13 @@ from binaryninjaui import (
 )
 
 from .explain import explain_llil, fold_multi_il
+from .explainers import explainer_for_architecture
 from .util import (
     get_function_at,
-    find_llil,
-    find_lifted_il,
-    inst_in_func,
+    log_error,
     colorize,
     get_instruction,
 )
-
-from .explainers import explainer_for_architecture
 
 
 def make_hline():

@@ -4,7 +4,6 @@ from binaryninja import (
     LowLevelILOperation,
     LowLevelILInstruction,
     log_info,
-    log_error,
     ILFlag,
 )
 

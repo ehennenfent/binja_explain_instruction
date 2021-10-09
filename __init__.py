@@ -2,7 +2,11 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QImage, QPainter, QFont, QColor
 from binaryninjaui import SidebarWidgetType, Sidebar, getDefaultMonospaceFont
 
-from .gui import ExplanationWindow
+from .gui import ExplanationWindow, make_description
+from .util import debug_instruction
+from .explainers import X86Explainer
+
+__all__ = [debug_instruction, make_description, X86Explainer]
 
 
 class ExplainSidebarWidgetType(SidebarWidgetType):

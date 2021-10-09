@@ -2,6 +2,7 @@ import typing
 
 from PySide6.QtGui import QColor
 from binaryninja import InstructionTextTokenType, InstructionTextToken, BinaryView
+from binaryninja import log_error as binja_log_error
 
 
 def get_function_at(bv, addr):
@@ -94,20 +95,37 @@ def get_instruction(bv: BinaryView, addr: int) -> typing.List[InstructionTextTok
     return tokens
 
 
-def debug_ils(bv, addr):
+def debug_instruction(bv, addr):
+    print("Address:")
+    print(" ", hex(addr))
+    print("Architecture:")
+    print(" ", bv.arch)
+    print("bv.read:")
+    print(" ", bv.read(addr, bv.arch.max_instr_length).hex())
+    print("bv.get_disassembly:")
+    print(" ", bv.get_disassembly(addr))
     function = bv.get_functions_containing(addr)[0]
     print("function.get_lifted_il_at:")
-    print("\t", function.get_lifted_il_at(addr))
+    print(" ", function.get_lifted_il_at(addr))
     print("function.get_lifted_ils_at:")
-    print("\t", function.get_lifted_ils_at(addr))
+    print(" ", function.get_lifted_ils_at(addr))
     print("function.get_llil_at:")
-    print("\t", function.get_llil_at(addr))
+    print(" ", function.get_llil_at(addr))
     print("function.get_llils_at:")
-    print("\t", function.get_llils_at(addr))
+    print(" ", function.get_llils_at(addr))
     print("architecture.get_low_level_il_from_bytes:")
     print(
-        "\t",
+        " ",
         bv.arch.get_low_level_il_from_bytes(
             bv.read(addr, bv.arch.max_instr_length), addr
         ),
+    )
+
+
+def log_error(*args):
+    binja_log_error(*args)
+    binja_log_error(
+        "Please consider submitting a bug report at "
+        "https://github.com/ehennenfent/binja_explain_instruction/"
+        "issues/new?assignees=&labels=bug&template=bug_report.md&title="
     )
