@@ -1,5 +1,3 @@
-import re
-
 instrs = {
     "AAA": [
         {
@@ -6833,41 +6831,3 @@ instrs = {
         }
     ],
 }
-
-regexes = {
-    "CMOV[A-Z][A-Z]?[A-Z]?": "CMOVcc",
-    "J[A-L,N-Z][A-N,Q-Z]?[A-Z]?[A-Z]?": "Jcc",
-    "SET[A-Z][A-Z]?[A-Z]?": "SETcc",
-    "LOOP[A-Z][A-Z]?[A-Z]?": "LOOPcc",
-    "FCMOV[A-Z][A-Z]?[A-Z]?": "FCMOVcc",
-}
-
-reg_cache = {}
-
-
-def find_proper_name(instruction):
-    global reg_cache  # This file is so big, pylint can't even yell at me about using globals
-    """ Matches Jcc, CMOVcc, etc to their proper indices in the documentation dict """
-    out = str(instruction).strip().upper()
-    for regex in regexes:
-        if regex not in reg_cache:
-            reg_cache[regex] = re.compile(regex)
-        reg = reg_cache[regex]
-        if reg.match(out):
-            out = regexes[regex]
-            break
-    return out
-
-
-def get_doc_url(i):
-    """ Takes in the instruction tokens and returns [(short form, doc url)] """
-    names = map(find_proper_name, i)  # handles instruction prefixes
-    output = []
-    for name in names:
-        if name in instrs.keys():
-            inst_data = instrs[name][0]
-            output.append((inst_data["short"], inst_data["link"]))
-    # For 90% of instructions, output could just be a tuple and we could be done with it.
-    # However, the lock and rep* prefixes should be documented too (to prevent major "WTH" moments)
-    # so we have to structure everything around having a list of results
-    return output

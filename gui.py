@@ -1,33 +1,35 @@
-from binaryninjaui import DockHandler, DockContextHandler, UIActionHandler
-from PySide2 import QtCore
-from PySide2.QtCore import Qt, QCoreApplication
-from PySide2.QtWidgets import (
-    QApplication,
+import traceback
+import typing
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
     QFrame,
-    QVBoxLayout,
-    QLabel,
-    QWidget,
-    QMainWindow,
-    QTextBrowser,
+)
+from PySide6.QtWidgets import QVBoxLayout, QLabel
+from binaryninja import (
+    BinaryView,
+    Architecture,
+    LowLevelILInstruction,
+    InstructionTextTokenType,
+    ThemeColor,
+)
+from binaryninjaui import (
+    SidebarWidget,
+    UIActionHandler,
+    getTokenColor,
+    getThemeColor,
+    getMonospaceFont,
 )
 
-from PySide2.QtGui import QFontDatabase, QFont
-
-app = QApplication.instance()
-if app is None:
-    app = QCoreApplication.instance()
-# if app is None:
-#     app = qApp
-try:
-    main_window = [x for x in app.allWidgets() if x.__class__ is QMainWindow][0]
-except IndexError:
-    raise Exception("Could not attach to main window!")
-
-from .util import *
-
-mlil_tooltip = """Often, several assembly instructions make up one MLIL instruction.
-The MLIL instruction shown may not correspond to this instruction
-alone, or this instruction may not have a direct MLIL equivalent."""
+from .explain import explain_llil, fold_multi_il
+from .explainers import explainer_for_architecture
+from .util import (
+    get_function_at,
+    log_error,
+    colorize,
+    get_instruction,
+)
 
 
 def make_hline():
@@ -37,114 +39,76 @@ def make_hline():
     return out
 
 
-def __None__(*args):
-    return [
-        (
-            "No documentation available",
-            "https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md",
-        )
-    ]
+class ExplanationWindow(SidebarWidget):
+    """Displays a brief explanation of what an instruction does"""
 
+    def __init__(self, name, _frame, bv: typing.Optional[BinaryView] = None):
+        SidebarWidget.__init__(self, name)
+        self.actionHandler = UIActionHandler()
+        self.actionHandler.setupActionHandler(self)
 
-class ExplanationWindow(QWidget):
-    """ Displays a brief explanation of what an instruction does """
+        self.configured_arch = None
+        self._bv = None
+        self.arch_explainer = None
 
-    def __init__(self):
-        super(ExplanationWindow, self).__init__()
-        self.setWindowTitle("Explain Instruction")
-        self.setLayout(QVBoxLayout())
-        self._layout = self.layout()
+        # Configures configured_arch, _bv, and arch_explainer
+        self.bv = bv
+
+        self.colors = {t: getTokenColor(self, t) for t in InstructionTextTokenType}
+
+        self._layout = QVBoxLayout(self)
+        self._layout.setAlignment(Qt.AlignTop)
 
         self.newline = "\n"
 
-        self._labelFont = QFont()
-        self._labelFont.setPointSize(12)
+        self._label_font: QFont = QFont()
+        self._mono_font: QFont = getMonospaceFont(self)
+        self._mono_font_large: QFont = getMonospaceFont(self)
+        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 6)
 
-        self._labelA = QLabel()
-        self._labelA.setText("Instruction:")
-        self._labelA.setFont(self._labelFont)
-        self._layout.addWidget(self._labelA)
+        def make_label(text):
+            label = QLabel(text)
+            label.setFont(self._label_font)
+            return label
 
         self._instruction = QLabel()
-        self._instruction.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._instruction.setFont(self._mono_font_large)
         self._instruction.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._instruction.setWordWrap(True)
         self._layout.addWidget(self._instruction)
 
         self._layout.addWidget(make_hline())
 
-        self._labelF = QLabel()
-        self._labelF.setText("Short Form:")
-        self._labelF.setFont(self._labelFont)
-        self._layout.addWidget(self._labelF)
+        self._short_form_label = make_label("Short Form:")
+        self._layout.addWidget(self._short_form_label)
 
         self._shortForm = QLabel()
         self._shortForm.setTextFormat(Qt.RichText)
         self._shortForm.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self._shortForm.setOpenExternalLinks(True)
+        self._shortForm.setWordWrap(True)
         self._layout.addWidget(self._shortForm)
 
         self._layout.addWidget(make_hline())
 
-        self._labelB = QLabel()
-        self._labelB.setText("Description:")
-        self._labelB.setFont(self._labelFont)
-        self._layout.addWidget(self._labelB)
+        self._description_label = make_label("Description:")
+        self._layout.addWidget(self._description_label)
 
         self._description = QLabel()
         self._description.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._description.setWordWrap(True)
         self._layout.addWidget(self._description)
 
         self._layout.addWidget(make_hline())
 
-        self._labelC = QLabel()
-        self._labelC.setText("Equivalent LLIL:")
-        self._labelC.setFont(self._labelFont)
-        self._layout.addWidget(self._labelC)
+        self._llil_label = make_label("Corresponding LLIL:")
+        self._layout.addWidget(self._llil_label)
 
         self._LLIL = QLabel()
-        self._LLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self._LLIL.setFont(self._mono_font)
         self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._LLIL.setWordWrap(True)
         self._layout.addWidget(self._LLIL)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelD = QLabel()
-        self._labelD.setText("Equivalent* MLIL:")
-        self._labelD.setToolTip(mlil_tooltip)
-        self._labelD.setFont(self._labelFont)
-        self._layout.addWidget(self._labelD)
-
-        self._MLIL = QLabel()
-        self._MLIL.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._MLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._MLIL)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelG = QLabel()
-        self._labelG.setText("Flag Operations:")
-        self._labelG.setFont(self._labelFont)
-        self._layout.addWidget(self._labelG)
-
-        self._flags = QLabel()
-        self._flags.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self._layout.addWidget(self._flags)
-
-        self._layout.addWidget(make_hline())
-
-        self._labelE = QLabel()
-        self._labelE.setText("Instruction State:")
-        self._labelE.setFont(self._labelFont)
-        self._layout.addWidget(self._labelE)
-
-        self._stateDisplay = QTextBrowser()
-        self._stateDisplay.setOpenLinks(False)
-        self._stateDisplay.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self._layout.addWidget(self._stateDisplay)
-
-        self.setObjectName("Explain_Window")
-
-        self.get_doc_url = __None__
 
     @property
     def instruction(self):
@@ -159,51 +123,159 @@ class ExplanationWindow(QWidget):
         return self._LLIL.text()
 
     @property
-    def mlil(self):
-        return self._MLIL.text()
-
-    @property
-    def state(self):
-        return self._stateDisplay.toPlainText()
-
-    @property
-    def flags(self):
-        return self._flags.text()
+    def short_form(self):
+        return self._shortForm.text()
 
     @instruction.setter
-    def instruction(self, instr):
-        i, s = parse_instruction(self, instr)
-        self._instruction.setText(i)
-        self._shortForm.setText(s)
+    def instruction(self, instr: typing.Optional[str]):
+        self._instruction.setText(str(instr))
 
     @description.setter
-    def description(self, desc_list):
-        self._description.setText(parse_description(self, desc_list))
+    def description(self, desc_list: typing.List[str]):
+        self._description.setText("\n".join(desc_list))
 
     @llil.setter
-    def llil(self, llil_list):
-        self._LLIL.setText(parse_llil(self, llil_list))
+    def llil(self, llil_list: typing.List[str]):
+        self._LLIL.setText("<br>".join(llil_list))
 
-    @mlil.setter
-    def mlil(self, mlil_list):
-        self._MLIL.setText(parse_mlil(self, mlil_list))
+    @short_form.setter
+    def short_form(self, new_short_form: typing.Optional[str]):
+        self._shortForm.setText(str(new_short_form))
 
-    @state.setter
-    def state(self, state_list):
-        self._stateDisplay.setPlainText(parse_state(self, state_list))
+    @property
+    def bv(self):
+        return self._bv
 
-    @flags.setter
-    def flags(self, tuple_list_list):
-        self._flags.setText(parse_flags(self, tuple_list_list))
+    @bv.setter
+    def bv(self, new_bv: typing.Optional[BinaryView]):
+        self._bv = new_bv
+        if self._bv is not None:
+            self.configure_for_arch(self._bv.arch)
 
-    def escape(self, in_str):
+    @staticmethod
+    def escape(in_str):
         return in_str
 
+    def explain_instruction(self, addr):
+        """Callback for the menu item that passes the information to the GUI"""
 
-def explain_window():
-    global main_window
-    # Creates a new window if it doesn't already exist
-    if not hasattr(main_window, "explain_window"):
-        main_window.explain_window = ExplanationWindow()
+        # Get the relevant information for this address
+        func = get_function_at(self.bv, addr)
+        if func is None:
+            return self.reset()
+        instruction = get_instruction(self.bv, addr)
 
-    return main_window.explain_window
+        with Atomic():
+            self.instruction = (
+                f"<font color={getThemeColor(ThemeColor.AddressColor).name()}>"
+                f"{addr:^0{self.bv.arch.address_size}x}</font>:  "
+                f"{''.join(colorize(self.colors, instruction))}"
+            )
+
+        with Atomic():
+            docs = self.arch_explainer.get_doc_url(instruction)
+            self.short_form = "\n".join(
+                '<a href="{href}">{form}</a>'.format(href=url, form=short_form)
+                for short_form, url in docs
+            )
+
+        self._description.setText("Generating description...")
+
+        lifted_il_list = func.get_lifted_ils_at(addr)
+        llil_list = func.get_llils_at(addr)
+
+        with Atomic():
+            self.llil = dereference_llil(llil_list, self.colors)
+
+        with Atomic():
+            self.description = make_description(
+                self.bv, self.arch_explainer, instruction, lifted_il_list, llil_list
+            )
+
+    def reset(self):
+        self.instruction = None
+        self.short_form = None
+        self.description = []
+        self.llil = []
+
+    def configure_for_arch(self, arch: Architecture):
+        self.configured_arch = arch
+        self.arch_explainer = explainer_for_architecture(arch)(self.bv)
+
+    def notifyOffsetChanged(self, offset):
+        self.explain_instruction(offset)
+
+    def notifyViewChanged(self, view_frame):
+        if view_frame is None:
+            self.bv = None
+        else:
+            view = view_frame.getCurrentViewInterface()
+            self.bv = view.getData()
+
+    def contextMenuEvent(self, event):
+        self.m_contextMenuManager.show(self.m_menu, self.actionHandler)
+
+    def notifyThemeChanged(self, *args, **kwargs):
+        self.repaint()
+
+    def notifyFontChanged(self, *args, **kwargs):
+        # I don't know how to get a non-monospaced font from the Binja UI API
+        self._label_font = QFont()
+        self._mono_font: QFont = getMonospaceFont(self)
+        self._mono_font_large: QFont = getMonospaceFont(self)
+        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 6)
+
+        self._short_form_label.setFont(self._label_font)
+        self._description_label.setFont(self._label_font)
+        self._llil_label.setFont(self._label_font)
+
+        self._instruction.setFont(self._mono_font_large)
+        self._LLIL.setFont(self._mono_font)
+
+
+class Atomic:
+    """Suppresses all exceptions within the wrapped context"""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_value is not None:
+            log_error(traceback.format_exc())
+        return True
+
+
+def make_description(bv, arch_explainer, instruction, lifted_il_list, llil_list):
+    # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
+    # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
+    parse_il = fold_multi_il(bv, llil_list if len(llil_list) > 0 else lifted_il_list)
+    # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
+    # over the one generated via the LLIL
+    (
+        should_supersede,
+        explanation_list,
+    ) = arch_explainer.explain_instruction(instruction, lifted_il_list)
+    return explanation_list + (
+        [] if should_supersede else [explain_llil(bv, llil) for llil in parse_il]
+    )
+
+
+def dereference_llil(
+    llil_list: typing.List[LowLevelILInstruction], color_map
+) -> typing.List[str]:
+    # TODO - fix dereferencing
+    return list(
+        "{}: ".format(llil.instr_index)
+        + "".join(
+            colorize(
+                color_map,
+                (
+                    llil.tokens
+                    if not hasattr(llil, "deref_tokens")
+                    else llil.deref_tokens
+                ),
+            )
+        )
+        for llil in llil_list
+        if llil is not None
+    )

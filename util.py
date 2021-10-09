@@ -1,39 +1,32 @@
+import typing
+
+from PySide6.QtGui import QColor
+from binaryninja import InstructionTextTokenType, InstructionTextToken, BinaryView
+from binaryninja import log_error as binja_log_error
+
+
 def get_function_at(bv, addr):
-    """ Gets the function that contains a given address, even if that address
-    isn't the start of the function """
-    blocks = bv.get_basic_blocks_at(addr)
-    return blocks[0].function if (blocks is not None and len(blocks) > 0) else None
-
-
-def find_mlil(func, addr):
-    return find_in_IL(func.medium_level_il, addr)
+    """Gets the function that contains a given address, even if that address
+    isn't the start of the function"""
+    functions = bv.get_functions_containing(addr)
+    return functions[0] if (functions is not None and len(functions) > 0) else None
 
 
 def find_llil(func, addr):
-    return find_in_IL(func.low_level_il, addr)
+    return func.get_llils_at(addr)
 
 
 def find_lifted_il(func, addr):
-    return find_in_IL(func.lifted_il, addr)
-
-
-def find_in_IL(il, addr):
-    """ Finds everything at the given address within the IL function passed in """
-    out = []
-    for block in il:
-        for instruction in block:
-            if instruction.address == addr:
-                out.append(instruction)
-    return out
+    return func.get_lifted_ils_at(addr)
 
 
 def inst_in_func(func, addr):
-    """ Finds an assembly function at the address given """
+    """Finds an assembly function at the address given"""
     return func.view.get_disassembly(addr)
 
 
 def dereference_symbols(bv, il_instruction):
-    """ If the instruction contains anything that looks vaguely like a hex
+    """If the instruction contains anything that looks vaguely like a hex
     number, see if there's a function there, and if so, replace it with the
     function symbol."""
     if il_instruction is not None:
@@ -52,71 +45,8 @@ def dereference_symbols(bv, il_instruction):
     return il_instruction
 
 
-def parse_instruction(context, instr):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
-    if instr is not None:
-        docs = context.get_doc_url(instr.split(" "))
-        instruction = context.escape(instr.replace("    ", " "))
-        shortForm = context.newline.join(
-            '<a href="{href}">{form}</a>'.format(
-                href=url, form=context.escape(short_form)
-            )
-            for short_form, url in docs
-        )
-        return instruction, shortForm
-    else:
-        return "None", "None"
-
-
-def parse_description(context, desc_list):
-    return context.newline.join(
-        context.escape(new_description) for new_description in desc_list
-    )
-
-
-def parse_llil(context, llil_list):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
-    newText = ""
-    for llil in llil_list:
-        if llil is not None:
-            tokens = llil.deref_tokens if hasattr(llil, "deref_tokens") else llil.tokens
-            newText += "{}: ".format(llil.instr_index)
-            newText += "".join(context.escape(str(token)) for token in tokens)
-        else:
-            newText += "None"
-        newText += context.newline
-    if len(llil_list) > 0:
-        return newText.strip(context.newline)
-    else:
-        return "None"
-
-
-def parse_mlil(context, mlil_list):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
-    newText = ""
-    for mlil in mlil_list:
-        if mlil is not None:
-            tokens = mlil.deref_tokens if hasattr(mlil, "deref_tokens") else mlil.tokens
-            newText += "{}: ".format(mlil.instr_index)
-            newText += "".join(context.escape(str(token)) for token in tokens)
-        else:
-            newText += "None"
-        newText += context.newline
-    if len(mlil_list) > 0:
-        return newText.strip(context.newline)
-    else:
-        return "None"
-
-
-def parse_state(context, state_list):
-    if state_list is not None:
-        return context.newline.join(context.escape(state) for state in state_list)
-    else:
-        return "None"
-
-
 def rec_replace(in_str, old, new):
-    """ Recursively replace a string in a string """
+    """Recursively replace a string in a string"""
     if old == new:
         return in_str
     if old not in in_str:
@@ -124,33 +54,78 @@ def rec_replace(in_str, old, new):
     return rec_replace(in_str.replace(old, new), old, new)
 
 
-def parse_flags(context, tuple_list_list):
-    """ Helps the GUI go from lists of instruction data to a cleanly formatted string """
-    out = ""
-    for f_read, f_written, lifted in tuple_list_list:
-        if len(f_read) > 0:
-            out += (
-                (
-                    "(Lifted IL: {}) ".format(lifted.instr_index)
-                    if len(tuple_list_list) > 1
-                    else ""
-                )
-                + "Reads: "
-                + ", ".join(f_read)
-                + context.newline
-            )
-        if len(f_written) > 0:
-            out += (
-                (
-                    "(Lifted IL: {}) ".format(lifted.instr_index)
-                    if len(tuple_list_list) > 1
-                    else ""
-                )
-                + "Writes: "
-                + ", ".join(f_written)
-                + context.newline
-            )
-        out += context.newline
-    out = rec_replace(out.strip(context.newline), context.newline * 2, context.newline)
-    out = "None" if len(out) == 0 else out
-    return out
+class AttrDict(dict):
+    """Borrowed from https://stackoverflow.com/a/14620633. Lets us use the . notation
+    in format strings."""
+
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
+def parse_instruction(instruction):
+    """Removes whitespace and commas from the instruction tokens"""
+    tokens = filter(
+        lambda x: len(x) > 0,
+        [str(token).strip().replace(",", "") for token in str(instruction).split(" ")],
+    )
+    return list(tokens)
+
+
+def colorize(
+    color_map: typing.Dict[InstructionTextTokenType, QColor],
+    tokens: typing.List[InstructionTextToken],
+) -> typing.List[str]:
+    color_format = "<font color={color}>{value}</font>"
+    return list(
+        color_format.format(
+            color=color_map.get(token.type, QColor("white")).name(), value=str(token)
+        )
+        if len(str(token).strip()) > 0
+        else " "
+        for token in tokens
+    )
+
+
+def get_instruction(bv: BinaryView, addr: int) -> typing.List[InstructionTextToken]:
+    arch = bv.arch
+    tokens, _size = arch.get_instruction_text(
+        bv.read(addr, arch.max_instr_length), addr
+    )
+    return tokens
+
+
+def debug_instruction(bv, addr):
+    print("Address:")
+    print(" ", hex(addr))
+    print("Architecture:")
+    print(" ", bv.arch)
+    print("bv.read:")
+    print(" ", bv.read(addr, bv.arch.max_instr_length).hex())
+    print("bv.get_disassembly:")
+    print(" ", bv.get_disassembly(addr))
+    function = bv.get_functions_containing(addr)[0]
+    print("function.get_lifted_il_at:")
+    print(" ", function.get_lifted_il_at(addr))
+    print("function.get_lifted_ils_at:")
+    print(" ", function.get_lifted_ils_at(addr))
+    print("function.get_llil_at:")
+    print(" ", function.get_llil_at(addr))
+    print("function.get_llils_at:")
+    print(" ", function.get_llils_at(addr))
+    print("architecture.get_low_level_il_from_bytes:")
+    print(
+        " ",
+        bv.arch.get_low_level_il_from_bytes(
+            bv.read(addr, bv.arch.max_instr_length), addr
+        ),
+    )
+
+
+def log_error(*args):
+    binja_log_error(*args)
+    binja_log_error(
+        "Please consider submitting a bug report at "
+        "https://github.com/ehennenfent/binja_explain_instruction/"
+        "issues/new?assignees=&labels=bug&template=bug_report.md"
+    )

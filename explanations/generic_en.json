@@ -16,7 +16,7 @@
   "LLIL_ADD": "{llil.left} + {llil.right}",
   "LLIL_SUB": "{llil.left} - {llil.right}",
   "LLIL_SBB": "{llil.left} - ({llil.right} + CarryFlag)",
-  "LLIL_SBB": "{llil.left} + {llil.right} + CarryFlag",
+  "LLIL_ADDC": "{llil.left} + {llil.right} + CarryFlag",
   "LLIL_MUL": "{llil.left} * {llil.right}",
   "LLIL_MULU_DP": "{llil.left} * {llil.right} (unsigned, double precision)",
   "LLIL_MULS_DP": "{llil.left} * {llil.right} (signed, double precision)",

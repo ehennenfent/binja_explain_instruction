@@ -1,12 +1,13 @@
-import json, traceback
+import traceback
+
 from binaryninja import (
     LowLevelILOperation,
     LowLevelILInstruction,
     log_info,
-    log_error,
-    user_plugin_path,
     ILFlag,
 )
+
+from .explanations import il_explanations as explanations
 from .util import *
 
 # Instruction attributes that can contain nested LLIL instructions (see preprocess)
@@ -21,18 +22,9 @@ no_paren = [
     LowLevelILOperation.LLIL_FLAG,
 ]
 
-# Using user_plugin_path doesn't work with plugins that have been installed from the repository manager,
-# since it points to .binaryninja/plugins instead of .binaryninja/repositories
-# path = user_plugin_path + '/binja_explain_instruction/explanations_en.json'
-import os
-
-path = os.path.dirname(os.path.realpath(__file__)) + "/explanations_en.json"
-with open(path, "r") as explanation_file:
-    explanations = json.load(explanation_file)
-
 
 def preprocess_LLIL_CONST(_bv, llil_instruction):
-    """ Replaces integer constants with hex tokens """
+    """Replaces integer constants with hex tokens"""
     llil_instruction.constant = llil_instruction.tokens[
         0
     ]  # hex(llil_instruction.constant).replace('L','')
@@ -40,7 +32,7 @@ def preprocess_LLIL_CONST(_bv, llil_instruction):
 
 
 def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
-    """ Replaces integer constants with symbols (if available) and hex tokens otherwise """
+    """Replaces integer constants with symbols (if available) and hex tokens otherwise"""
     found_symbol = False
     for symbol in bv.get_symbols():
         if symbol.address == llil_instruction.constant:
@@ -53,13 +45,13 @@ def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
 
 
 def preprocess_LLIL_FLAG_COND(_bv, llil_instruction):
-    """ Expands FLAG_COND enums """
+    """Expands FLAG_COND enums"""
     llil_instruction.condition = explanations[llil_instruction.condition.name]
     return llil_instruction
 
 
 def preprocess_LLIL_GOTO(bv, llil_instruction):
-    """ Replaces integer addresses of llil instructions with hex addresses of assembly """
+    """Replaces integer addresses of llil instructions with hex addresses of assembly"""
     func = get_function_at(bv, llil_instruction.address)
     # We have to use the lifted IL since the LLIL ignores comparisons and tests
     lifted_instruction = list(
@@ -77,7 +69,7 @@ def preprocess_LLIL_GOTO(bv, llil_instruction):
 
 
 def preprocess_LLIL_IF(bv, llil_instruction):
-    """ Replaces integer addresses of llil instructions with hex addresses of assembly """
+    """Replaces integer addresses of llil instructions with hex addresses of assembly"""
     func = get_function_at(bv, llil_instruction.address)
     # We have to use the lifted IL since the LLIL ignores comparisons and tests
     lifted_instruction = list(
@@ -98,7 +90,7 @@ def preprocess_LLIL_IF(bv, llil_instruction):
 
 
 def preprocess_LLIL_FLAG(bv, llil_instruction):
-    """ Follow back temporary flags and append the address where they're created """
+    """Follow back temporary flags and append the address where they're created"""
     if llil_instruction.src.temp:
         flag = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_flag_definition(flag)
@@ -127,7 +119,7 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
             llil_instruction.address = "in multiple code paths"
     elif type(llil_instruction.src) == ILFlag:
         # On occasion, binja won't know what to do with a CPU flag and will use it "raw" without figuring
-        # out what the conditonal means. Happens with the direction flag on x86 sometimes.
+        # out what the conditional means. Happens with the direction flag on x86 sometimes.
         llil_instruction.src = (
             bv.arch.flag_roles[llil_instruction.src.name].name.replace("Role", "")
             + " is set"
@@ -137,7 +129,7 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
 
 
 def preprocess_LLIL_REG(_bv, llil_instruction):
-    """ Follow back temporary registers and append the address where they're created """
+    """Follow back temporary registers and append the address where they're created"""
     if llil_instruction.src.temp:
         reg = llil_instruction.ssa_form.src
         indx = llil_instruction.function.get_ssa_reg_definition(reg)
@@ -173,7 +165,7 @@ preprocess_dict = {
 
 
 def preprocess(bv, llil_instruction):
-    """ Apply preprocess functions to instructions and expand explanations for nested LLIL operations """
+    """Apply preprocess functions to instructions and expand explanations for nested LLIL operations"""
     if llil_instruction.operation.name in preprocess_dict:
         out = preprocess_dict[llil_instruction.operation.name](bv, llil_instruction)
         llil_instruction = out if out is not None else llil_instruction
@@ -198,7 +190,7 @@ def preprocess(bv, llil_instruction):
 
 
 def explain_llil(bv, llil_instruction):
-    """ Returns the explanation string from explanations_en.json, formatted with the preprocessed LLIL instruction """
+    """Returns the explanation string from explanations_en.json, formatted with the preprocessed LLIL instruction"""
     if llil_instruction is None:
         return
     if llil_instruction.operation.name in explanations:
@@ -209,12 +201,11 @@ def explain_llil(bv, llil_instruction):
             )
         except AttributeError:
             # Usually a bad format string. Shouldn't show up unless something truly weird happens.
-            log_error("Bad Format String in binja_explain_instruction")
-            traceback.print_exc()
+            log_error(traceback.format_exc())
             return llil_instruction.operation.name
     # If there's anything in the LLIL that doesn't have an explanation, yell about it in the logs
     log_info(
-        "binja_explain_instruction doen't understand "
+        "Explain Instruction doesn't understand "
         + llil_instruction.operation.name
         + " yet"
     )
@@ -222,7 +213,7 @@ def explain_llil(bv, llil_instruction):
 
 
 def fold_multi_il(_bv, llil_list):
-    """ Filters out the setting of temporary registers and flags """
+    """Filters out the setting of temporary registers and flags"""
     out = []
     # This doesn't do any "folding" right now. In the future, we could fold temporary variables into
     # instructions that use them rather than seeking them in the preprocess functions, but there are some issues
