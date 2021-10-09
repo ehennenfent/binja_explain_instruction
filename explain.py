@@ -28,7 +28,7 @@ def preprocess_LLIL_CONST(_bv, llil_instruction):
     """Replaces integer constants with hex tokens"""
     llil_instruction.constant = llil_instruction.tokens[
         0
-    ]  # hex(llil_instruction.constant).replace('L','')
+    ]  # to_hex(llil_instruction.constant)
     return llil_instruction
 
 
@@ -41,7 +41,7 @@ def preprocess_LLIL_CONST_PTR(bv, llil_instruction):
             found_symbol = True
             break
     if not found_symbol:
-        llil_instruction.constant = hex(llil_instruction.constant).replace("L", "")
+        llil_instruction.constant = to_hex(llil_instruction.constant)
     return llil_instruction
 
 
@@ -63,9 +63,7 @@ def preprocess_LLIL_GOTO(bv, llil_instruction):
         ]
     )[0]
     lifted_il = func.lifted_il
-    llil_instruction.dest = hex(lifted_il[lifted_instruction.dest].address).replace(
-        "L", ""
-    )
+    llil_instruction.dest = to_hex(lifted_il[lifted_instruction.dest].address)
     return llil_instruction
 
 
@@ -81,12 +79,8 @@ def preprocess_LLIL_IF(bv, llil_instruction):
         ]
     )[0]
     lifted_il = func.lifted_il
-    llil_instruction.true = hex(lifted_il[lifted_instruction.true].address).replace(
-        "L", ""
-    )
-    llil_instruction.false = hex(lifted_il[lifted_instruction.false].address).replace(
-        "L", ""
-    )
+    llil_instruction.true = to_hex(lifted_il[lifted_instruction.true].address)
+    llil_instruction.false = to_hex(lifted_il[lifted_instruction.false].address)
     return llil_instruction
 
 
@@ -99,9 +93,7 @@ def preprocess_LLIL_FLAG(bv, llil_instruction):
         if hasattr(src, "src"):
             # Make sure that we're actually looking at a instruction that sets something (and not a Phi function)
             llil_instruction.src = src.src
-            llil_instruction.address = hex(llil_instruction.src.address).replace(
-                "L", ""
-            )
+            llil_instruction.address = to_hex(llil_instruction.src.address)
         elif type(llil_instruction.src == ILFlag):
             # Sometimes we have a temporary flag that resolves to a Phi function, which makes it show up at the same address.
             # Rather than try to build a conditional tree from the phi function (potentially impossible?) we default back to
@@ -141,9 +133,7 @@ def preprocess_LLIL_REG(_bv, llil_instruction):
             llil_instruction.src = src.src
             # Add a location flag so it's clear where in the program execution we actually got the source values from,
             # in case they've changed since then
-            llil_instruction.loc = " (at instruction {})".format(
-                hex(src.address).replace("L", "")
-            )
+            llil_instruction.loc = " (at instruction {})".format(to_hex(src.address))
         else:
             llil_instruction.loc = (
                 " (value dependent on code path used to reach this instruction)"
