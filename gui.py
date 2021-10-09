@@ -133,22 +133,9 @@ class ExplanationWindow(SidebarWidget):
         self._description.setText("\n".join(desc_list))
 
     @llil.setter
-    def llil(self, llil_list: typing.List[LowLevelILInstruction]):
-        newText = ""
-        for llil in llil_list:
-            if llil is not None:
-                tokens = (
-                    llil.deref_tokens if hasattr(llil, "deref_tokens") else llil.tokens
-                )
-                newText += "{}: ".format(llil.instr_index)
-                newText += "".join(self.escape(str(token)) for token in tokens)
-            else:
-                newText += "None"
-            newText += self.newline
-        if len(llil_list) > 0:
-            self._LLIL.setText(newText.strip(self.newline))
-        else:
-            self._LLIL.setText("None")
+    def llil(self, llil_list: typing.List[str]):
+        print(llil_list)
+        self._LLIL.setText("<br>".join(llil_list))
 
     @short_form.setter
     def short_form(self, new_short_form: typing.Optional[str]):
@@ -197,10 +184,7 @@ class ExplanationWindow(SidebarWidget):
         llil_list = func.get_llils_at(addr)
 
         with Atomic():
-            # Display the LLIL, dereferencing anything that looks like a hex number into a symbol if possible
-            self.llil = (
-                llil_list  # [dereference_symbols(self.bv, llil) for llil in llil_list]
-            )
+            self.llil = dereference_llil(llil_list, self.colors)
 
         with Atomic():
             self.description = make_description(
@@ -271,4 +255,25 @@ def make_description(bv, arch_explainer, instruction, lifted_il_list, llil_list)
     ) = arch_explainer.explain_instruction(instruction, lifted_il_list)
     return explanation_list + (
         [] if should_supersede else [explain_llil(bv, llil) for llil in parse_il]
+    )
+
+
+def dereference_llil(
+    llil_list: typing.List[LowLevelILInstruction], color_map
+) -> typing.List[str]:
+    # TODO - fix dereferencing
+    return list(
+        "{}: ".format(llil.instr_index)
+        + "".join(
+            colorize(
+                color_map,
+                (
+                    llil.tokens
+                    if not hasattr(llil, "deref_tokens")
+                    else llil.deref_tokens
+                ),
+            )
+        )
+        for llil in llil_list
+        if llil is not None
     )
