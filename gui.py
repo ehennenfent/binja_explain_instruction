@@ -62,11 +62,14 @@ class ExplanationWindow(SidebarWidget):
         self.colors = {t: getTokenColor(self, t) for t in InstructionTextTokenType}
 
         self._layout = QVBoxLayout(self)
+        self._layout.setAlignment(Qt.AlignTop)
 
         self.newline = "\n"
 
-        self._label_font = QFont()
-        self._mono_font = getMonospaceFont(self)
+        self._label_font: QFont = QFont()
+        self._mono_font: QFont = getMonospaceFont(self)
+        self._mono_font_large: QFont = getMonospaceFont(self)
+        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 6)
 
         def make_label(text):
             label = QLabel(text)
@@ -74,8 +77,9 @@ class ExplanationWindow(SidebarWidget):
             return label
 
         self._instruction = QLabel()
-        self._instruction.setFont(self._mono_font)
+        self._instruction.setFont(self._mono_font_large)
         self._instruction.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._instruction.setWordWrap(True)
         self._layout.addWidget(self._instruction)
 
         self._layout.addWidget(make_hline())
@@ -87,6 +91,7 @@ class ExplanationWindow(SidebarWidget):
         self._shortForm.setTextFormat(Qt.RichText)
         self._shortForm.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self._shortForm.setOpenExternalLinks(True)
+        self._shortForm.setWordWrap(True)
         self._layout.addWidget(self._shortForm)
 
         self._layout.addWidget(make_hline())
@@ -96,6 +101,7 @@ class ExplanationWindow(SidebarWidget):
 
         self._description = QLabel()
         self._description.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._description.setWordWrap(True)
         self._layout.addWidget(self._description)
 
         self._layout.addWidget(make_hline())
@@ -106,6 +112,7 @@ class ExplanationWindow(SidebarWidget):
         self._LLIL = QLabel()
         self._LLIL.setFont(self._mono_font)
         self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self._LLIL.setWordWrap(True)
         self._layout.addWidget(self._LLIL)
 
     @property
@@ -218,16 +225,17 @@ class ExplanationWindow(SidebarWidget):
         self.repaint()
 
     def notifyFontChanged(self, *args, **kwargs):
-        self._label_font = (
-            QFont()
-        )  # I don't know how to get a non-monospaced font from the Binja UI API
-        self._mono_font = getMonospaceFont(self)
+        # I don't know how to get a non-monospaced font from the Binja UI API
+        self._label_font = QFont()
+        self._mono_font: QFont = getMonospaceFont(self)
+        self._mono_font_large: QFont = getMonospaceFont(self)
+        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 6)
 
         self._short_form_label.setFont(self._label_font)
         self._description_label.setFont(self._label_font)
         self._llil_label.setFont(self._label_font)
 
-        self._instruction.setFont(self._mono_font)
+        self._instruction.setFont(self._mono_font_large)
         self._LLIL.setFont(self._mono_font)
 
 
