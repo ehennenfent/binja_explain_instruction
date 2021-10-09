@@ -55,7 +55,6 @@ class GenericExplainer:
                     )
                 except (AttributeError, KeyError):
                     # Usually a bad format string. Shouldn't show up unless something truly weird happens.
-                    log_error(f"Bad Format String in {self.__name__}")
                     log_error(traceback.format_exc())
                     out.append(name)
         return should_supersede, out

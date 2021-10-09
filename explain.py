@@ -201,7 +201,6 @@ def explain_llil(bv, llil_instruction):
             )
         except AttributeError:
             # Usually a bad format string. Shouldn't show up unless something truly weird happens.
-            log_error("Bad Format String in LLIL Explanation")
             log_error(traceback.format_exc())
             return llil_instruction.operation.name
     # If there's anything in the LLIL that doesn't have an explanation, yell about it in the logs

@@ -39,3 +39,6 @@ LLIL can have a number of quirks that may not be obvious to most Binary Ninja us
 
 ## Contributing
 This plugin is designed to make it simple to add support for new LLIL instructions or additional architectures. See [CONTRIBUTING.md](https://github.com/ehennenfent/binja_explain_instruction/blob/master/CONTRIBUTING.md). If you come across any inaccuracies, please file a pull request or create an issue.
+
+## Miscellany
+The icon for Explain Instruction is [blackboard by lastspark from the Noun Project](https://thenounproject.com/term/blackboard/367906/)

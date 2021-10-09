@@ -127,5 +127,5 @@ def log_error(*args):
     binja_log_error(
         "Please consider submitting a bug report at "
         "https://github.com/ehennenfent/binja_explain_instruction/"
-        "issues/new?assignees=&labels=bug&template=bug_report.md&title="
+        "issues/new?assignees=&labels=bug&template=bug_report.md"
     )
