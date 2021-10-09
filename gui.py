@@ -136,7 +136,6 @@ class ExplanationWindow(SidebarWidget):
 
     @llil.setter
     def llil(self, llil_list: typing.List[str]):
-        print(llil_list)
         self._LLIL.setText("<br>".join(llil_list))
 
     @short_form.setter

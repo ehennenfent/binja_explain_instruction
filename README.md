@@ -1,5 +1,5 @@
 # Explain Instruction plugin for Binary Ninja
-This plugin adds a popup window to Binary Ninja that explains in simple English what an assembly instruction does.
+This plugin adds a sidebar window to Binary Ninja that explains in simple English what an assembly instruction does.
 
 ![Example Screenshot](https://raw.githubusercontent.com/ehennenfent/binja_explain_instruction/master/Examples/screenshot.png)
 
