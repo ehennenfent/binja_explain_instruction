@@ -5,6 +5,7 @@ from binaryninja import (
     LowLevelILInstruction,
     log_info,
     ILFlag,
+    BackgroundTaskThread,
 )
 
 from .explanations import il_explanations as explanations
@@ -229,3 +230,51 @@ def fold_multi_il(_bv, llil_list):
         else:
             out.append(llil)
     return out
+
+
+def make_description(bv, arch_explainer, instruction, lifted_il_list, llil_list):
+    # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
+    # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
+    parse_il = fold_multi_il(bv, llil_list if len(llil_list) > 0 else lifted_il_list)
+    # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
+    # over the one generated via the LLIL
+    (
+        should_supersede,
+        explanation_list,
+    ) = arch_explainer.explain_instruction(instruction, lifted_il_list)
+    return explanation_list + (
+        [] if should_supersede else [explain_llil(bv, llil) for llil in parse_il]
+    )
+
+
+class ThreadExplainer(BackgroundTaskThread):
+    def __init__(
+        self, bv, arch_explainer, instruction, lifted_il_list, llil_list, final_callback
+    ):
+        super().__init__(
+            f"Generating Explanation for {instruction}...", can_cancel=True
+        )
+        self.bv = bv
+        self.arch_explainer = arch_explainer
+        self.instruction = instruction
+        self.lifted_il_list = lifted_il_list
+        self.llil_list = llil_list
+        self.final_callback = final_callback
+        self.descriptions = []
+
+    def run(self):
+        self.descriptions = make_description(
+            self.bv,
+            self.arch_explainer,
+            self.instruction,
+            self.lifted_il_list,
+            self.llil_list,
+        )
+
+    def cancel(self):
+        self.final_callback = lambda *_: None
+        super().cancel()
+
+    def finish(self):
+        super().finish()
+        self.final_callback(self.descriptions)

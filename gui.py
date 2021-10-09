@@ -1,7 +1,7 @@
 import traceback
 import typing
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFrame,
@@ -13,6 +13,7 @@ from binaryninja import (
     LowLevelILInstruction,
     InstructionTextTokenType,
     ThemeColor,
+    execute_on_main_thread,
 )
 from binaryninjaui import (
     SidebarWidget,
@@ -22,7 +23,7 @@ from binaryninjaui import (
     getMonospaceFont,
 )
 
-from .explain import explain_llil, fold_multi_il
+from .explain import ThreadExplainer
 from .explainers import explainer_for_architecture
 from .util import (
     get_function_at,
@@ -42,6 +43,8 @@ def make_hline():
 class ExplanationWindow(SidebarWidget):
     """Displays a brief explanation of what an instruction does"""
 
+    description_time = 4000
+
     def __init__(self, name, _frame, bv: typing.Optional[BinaryView] = None):
         SidebarWidget.__init__(self, name)
         self.actionHandler = UIActionHandler()
@@ -53,6 +56,11 @@ class ExplanationWindow(SidebarWidget):
 
         # Configures configured_arch, _bv, and arch_explainer
         self.bv = bv
+
+        self._explain_thread = None
+        self._explain_timer: QTimer = QTimer(self)
+        self._explain_timer.setSingleShot(True)
+        self._explain_timer.timeout.connect(self._timer_expired)
 
         self.colors = {t: getTokenColor(self, t) for t in InstructionTextTokenType}
 
@@ -159,6 +167,10 @@ class ExplanationWindow(SidebarWidget):
     def explain_instruction(self, addr):
         """Callback for the menu item that passes the information to the GUI"""
 
+        if self._explain_thread is not None:
+            self._explain_thread.cancel()
+        self._explain_timer.stop()
+
         # Get the relevant information for this address
         func = get_function_at(self.bv, addr)
         if func is None:
@@ -188,9 +200,25 @@ class ExplanationWindow(SidebarWidget):
             self.llil = dereference_llil(llil_list, self.colors)
 
         with Atomic():
-            self.description = make_description(
-                self.bv, self.arch_explainer, instruction, lifted_il_list, llil_list
+            self._explain_thread = ThreadExplainer(
+                self.bv,
+                self.arch_explainer,
+                instruction,
+                lifted_il_list,
+                llil_list,
+                self._description_generated,
             )
+            self._explain_thread.start()
+            self._explain_timer.start(self.description_time)
+
+    def _description_generated(self, new):
+        execute_on_main_thread(self._explain_timer.stop)
+        self.description = new
+
+    def _timer_expired(self):
+        if self._explain_thread is not None:
+            self._explain_thread.cancel()
+        self._description.setText("Description generation timed out")
 
     def reset(self):
         self.instruction = None
@@ -243,21 +271,6 @@ class Atomic:
         if exc_value is not None:
             log_error(traceback.format_exc())
         return True
-
-
-def make_description(bv, arch_explainer, instruction, lifted_il_list, llil_list):
-    # Typically, we use the Low Level IL for parsing instructions. However, sometimes there isn't a corresponding
-    # LLIL instruction (like for cmp), so in cases like that, we use the lifted IL, which is closer to the raw assembly
-    parse_il = fold_multi_il(bv, llil_list if len(llil_list) > 0 else lifted_il_list)
-    # Give the architecture submodule a chance to supply an explanation for this instruction that takes precedence
-    # over the one generated via the LLIL
-    (
-        should_supersede,
-        explanation_list,
-    ) = arch_explainer.explain_instruction(instruction, lifted_il_list)
-    return explanation_list + (
-        [] if should_supersede else [explain_llil(bv, llil) for llil in parse_il]
-    )
 
 
 def dereference_llil(

@@ -5,7 +5,7 @@ This plugin adds a sidebar window to Binary Ninja that explains in simple Englis
 
 ## Project state
 This project was last touched in 2017. I'm currently (in 2021) in the process of modernizing and improving it. Some things that still need to happen are:
-- [ ] Move description generation to a background thread
+- [x] Move description generation to a background thread
 - [ ] Find a new solution for attaching ride-along data to LLIL instructions
 - [ ] Write a test script that explains a large number of different instructions from a binary
 - [ ] Revisit the explanation generation algorithm if necessary
