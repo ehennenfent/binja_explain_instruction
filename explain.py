@@ -1,4 +1,5 @@
 import traceback
+from dataclasses import FrozenInstanceError
 
 from binaryninja import (
     LowLevelILOperation,
@@ -190,6 +191,9 @@ def explain_llil(bv, llil_instruction):
             return explanations[llil_instruction.operation.name].format(
                 llil=preprocess(bv, llil_instruction)
             )
+        except FrozenInstanceError as e:
+            # Trying to assign data to the LLIL instruction. Definitely a bug.
+            raise e
         except AttributeError:
             # Usually a bad format string. Shouldn't show up unless something truly weird happens.
             log_error(traceback.format_exc())
@@ -242,7 +246,8 @@ class ThreadExplainer(BackgroundTaskThread):
         self, bv, arch_explainer, instruction, lifted_il_list, llil_list, final_callback
     ):
         super().__init__(
-            f"Generating Explanation for {instruction}...", can_cancel=True
+            f"Generating Explanation for {fmt_instruction(instruction)}...",
+            can_cancel=True,
         )
         self.bv = bv
         self.arch_explainer = arch_explainer
