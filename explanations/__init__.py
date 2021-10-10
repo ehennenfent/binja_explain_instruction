@@ -15,10 +15,11 @@ with open(current_directory.joinpath("native", "x86_en.json"), "r") as explanati
 def find_missing():
     _missing = set()
     for op in LowLevelILOperation:
-        if op.name not in il_explanations and not op.name.endswith("_SSA"):
+        name: str = op.name
+        if name not in il_explanations and not ("_SSA" in name or "_PHI" in name):
             _missing.add(op.name)
     if _missing:
         log_warn(
             "Missing explanations for the following LLIL operations:\n"
-            + "\n".join(_missing)
+            + "\n".join(sorted(_missing))
         )
