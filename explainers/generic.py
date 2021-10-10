@@ -1,4 +1,5 @@
 import traceback
+from dataclasses import FrozenInstanceError
 
 from ..util import *
 
@@ -53,6 +54,9 @@ class GenericExplainer:
                             instr=self.preprocess(parsed, lifted_il_instrs, name)
                         )
                     )
+                except FrozenInstanceError as e:
+                    # Trying to assign data to the LLIL instruction. Definitely a bug.
+                    raise e
                 except (AttributeError, KeyError):
                     # Usually a bad format string. Shouldn't show up unless something truly weird happens.
                     log_error(traceback.format_exc())

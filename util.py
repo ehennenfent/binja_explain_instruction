@@ -129,3 +129,13 @@ def log_error(*args):
         "https://github.com/ehennenfent/binja_explain_instruction/"
         "issues/new?assignees=&labels=bug&template=bug_report.md"
     )
+
+
+def to_hex(i: int) -> str:
+    return hex(i).rstrip("L")
+
+
+def fmt_instruction(tokens):
+    return "".join(
+        str(token) if len(str(token).strip()) > 0 else " " for token in tokens
+    )

@@ -3,14 +3,6 @@ This plugin adds a sidebar window to Binary Ninja that explains in simple Englis
 
 ![Example Screenshot](https://raw.githubusercontent.com/ehennenfent/binja_explain_instruction/master/Examples/screenshot.png)
 
-## Project state
-This project was last touched in 2017. I'm currently (in 2021) in the process of modernizing and improving it. Some things that still need to happen are:
-- [ ] Move description generation to a background thread
-- [ ] Find a new solution for attaching ride-along data to LLIL instructions
-- [ ] Write a test script that explains a large number of different instructions from a binary
-- [ ] Revisit the explanation generation algorithm if necessary
-- [ ] Issue a new release and publish it on the plugins repo
-
 ## Examples
 The explanations are closer to English than the notation used in Binary Ninja, but may sometimes be strangely worded due to the fact that they are programmatically generated.
 ```

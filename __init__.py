@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QImage, QPainter, QFont, QColor
-from binaryninjaui import SidebarWidgetType, Sidebar, getDefaultMonospaceFont
+from PySide6.QtGui import QImage
+from binaryninjaui import SidebarWidgetType, Sidebar
 
-from .gui import ExplanationWindow, make_description
-from .util import debug_instruction
+from .explain import make_description
 from .explainers import X86Explainer
+from .gui import ExplanationWindow
+from .util import debug_instruction
 
 __all__ = [debug_instruction, make_description, X86Explainer]
 
