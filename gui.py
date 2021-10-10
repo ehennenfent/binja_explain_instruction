@@ -57,12 +57,14 @@ class ExplanationWindow(SidebarWidget):
         # Configures configured_arch, _bv, and arch_explainer
         self.bv = bv
 
+        self.last_explained = None
+
         self._explain_thread = None
         self._explain_timer: QTimer = QTimer(self)
         self._explain_timer.setSingleShot(True)
         self._explain_timer.timeout.connect(self._timer_expired)
 
-        self.colors = {t: getTokenColor(self, t) for t in InstructionTextTokenType}
+        self.colors = self._make_color_map()
 
         self._layout = QVBoxLayout(self)
         self._layout.setAlignment(Qt.AlignTop)
@@ -171,6 +173,11 @@ class ExplanationWindow(SidebarWidget):
             self._explain_thread.cancel()
         self._explain_timer.stop()
 
+        if addr is None:
+            return self.reset()
+
+        self.last_explained = addr
+
         # Get the relevant information for this address
         func = get_function_at(self.bv, addr)
         if func is None:
@@ -244,7 +251,8 @@ class ExplanationWindow(SidebarWidget):
         self.m_contextMenuManager.show(self.m_menu, self.actionHandler)
 
     def notifyThemeChanged(self, *args, **kwargs):
-        self.repaint()
+        self.colors = self._make_color_map()
+        self.explain_instruction(self.last_explained)
 
     def notifyFontChanged(self, *args, **kwargs):
         # I don't know how to get a non-monospaced font from the Binja UI API
@@ -259,6 +267,9 @@ class ExplanationWindow(SidebarWidget):
 
         self._instruction.setFont(self._mono_font_large)
         self._LLIL.setFont(self._mono_font)
+
+    def _make_color_map(self):
+        return {t: getTokenColor(self, t) for t in InstructionTextTokenType}
 
 
 class Atomic:
