@@ -72,25 +72,21 @@ class ExplanationWindow(SidebarWidget):
         self.newline = "\n"
 
         self._label_font: QFont = QFont()
+        self._label_font_small: QFont = QFont()
         self._mono_font: QFont = getMonospaceFont(self)
         self._mono_font_large: QFont = getMonospaceFont(self)
-        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 6)
+
+        self._label_font_small.setPointSize(self._label_font.pointSize() - 2)
+        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 4)
 
         def make_label(text):
             label = QLabel(text)
-            label.setFont(self._label_font)
             return label
 
         self._instruction = QLabel()
-        self._instruction.setFont(self._mono_font_large)
         self._instruction.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._instruction.setWordWrap(True)
         self._layout.addWidget(self._instruction)
-
-        self._layout.addWidget(make_hline())
-
-        self._short_form_label = make_label("Short Form:")
-        self._layout.addWidget(self._short_form_label)
 
         self._shortForm = QLabel()
         self._shortForm.setTextFormat(Qt.RichText)
@@ -115,10 +111,11 @@ class ExplanationWindow(SidebarWidget):
         self._layout.addWidget(self._llil_label)
 
         self._LLIL = QLabel()
-        self._LLIL.setFont(self._mono_font)
         self._LLIL.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self._LLIL.setWordWrap(True)
         self._layout.addWidget(self._LLIL)
+
+        self.notifyFontChanged()
 
     @property
     def instruction(self):
@@ -256,12 +253,14 @@ class ExplanationWindow(SidebarWidget):
 
     def notifyFontChanged(self, *args, **kwargs):
         # I don't know how to get a non-monospaced font from the Binja UI API
-        self._label_font = QFont()
+        self._label_font: QFont = QFont()
+        self._label_font_small: QFont = QFont()
         self._mono_font: QFont = getMonospaceFont(self)
         self._mono_font_large: QFont = getMonospaceFont(self)
-        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 6)
 
-        self._short_form_label.setFont(self._label_font)
+        self._label_font_small.setPointSize(self._label_font.pointSize() - 2)
+        self._mono_font_large.setPointSize(self._mono_font.pointSize() + 4)
+
         self._description_label.setFont(self._label_font)
         self._llil_label.setFont(self._label_font)
 
