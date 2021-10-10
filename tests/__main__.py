@@ -5,7 +5,10 @@ from typing import Dict, Set
 
 from binaryninja import BinaryView, BinaryViewType
 
-from . import InstructionData, get_instruction_data
+from .instruction_data import InstructionData, get_instruction_data
+from ..explanations import find_missing
+
+find_missing()
 
 SPACER = ""
 
